@@ -6,6 +6,10 @@ App Android para catalogar jogos de Super Nintendo (SNES), feito para o hobby do
 
 Toda comunicação sobre este projeto deve ser em português do Brasil (pt-br).
 
+## Forma de trabalho
+
+Sempre usar multiagentes especialistas (Agent tool, com `subagent_type` apropriado) para conduzir o trabalho neste projeto, em vez de fazer tudo inline na conversa principal. Pedido explícito do usuário (2026-07-29). Vale para qualquer ambiente (Mac ou Linux).
+
 ## Escopo funcional
 
 - Biblioteca completa dos jogos de SNES (todos os lançados, não só os do usuário), com capa e descrição de cada jogo.
