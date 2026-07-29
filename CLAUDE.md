@@ -38,6 +38,22 @@ O projeto é desenvolvido em dois ambientes:
 
 Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionado no git), em vez de depender de memória local do Claude Code, que não é compartilhada entre máquinas.
 
+## Estrutura do projeto
+
+- `app/build.gradle.kts` — módulo Android, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 26
+- `gradle/libs.versions.toml` — catálogo de versões (Compose BOM 2024.10.01, Room 2.6.1, Retrofit 2.11.0, Coil 2.7.0)
+- `app/src/main/java/com/thalys/catalogosnes/`
+  - `MainActivity.kt` — tela inicial provisória (grid Compose com jogos de exemplo hardcoded, sem dados reais ainda)
+  - `ui/theme/` — tema Compose (paleta escura estilo "Netflix")
+  - `data/local/` — Room: `JogoEntity` (metadados do catálogo), `PosseUsuarioEntity` (status pessoal: TENHO/QUERO_TER/NAO_INTERESSA, completude CIB, foto, nota de condição), `JogoComPosse` (relação), DAOs, `AppDatabase`
+  - `data/model/StatusPosse.kt` — enum de status de posse
+
+Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso).
+
 ## Status atual
 
-Projeto em fase de definição de escopo, ainda sem código-fonte. Próximos passos: estruturar o projeto Android (Gradle/Compose) e definir o modelo de dados considerando os status extras de posse do jogo.
+Projeto Android inicial montado e compilando (2026-07-29). Falta:
+- Integrar API do ScreenScraper (Retrofit) para popular `JogoEntity` com a biblioteca completa de jogos de SNES.
+- Conectar a tela (`MainActivity`/`TelaBiblioteca`) aos dados reais do Room em vez da lista de exemplo hardcoded.
+- Telas de detalhe do jogo e de edição de status de posse (toggle Tenho/Quero ter/Não interessa, CIB, foto, nota).
+- Cadastro/chave de API do ScreenScraper (ainda não criada).
