@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,17 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+
+// Credenciais do ScreenScraper vêm de local.properties (fora do git), nunca hardcoded.
+// Ausentes -> string vazia, para não quebrar o build antes de termos credenciais reais.
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+fun screenScraperProperty(key: String): String = localProperties.getProperty(key) ?: ""
 
 android {
     namespace = "com.thalys.catalogosnes"
@@ -16,6 +29,12 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1"
+
+        buildConfigField("String", "SCREENSCRAPER_DEVID", "\"${screenScraperProperty("SCREENSCRAPER_DEVID")}\"")
+        buildConfigField("String", "SCREENSCRAPER_DEVPASSWORD", "\"${screenScraperProperty("SCREENSCRAPER_DEVPASSWORD")}\"")
+        buildConfigField("String", "SCREENSCRAPER_SOFTNAME", "\"${screenScraperProperty("SCREENSCRAPER_SOFTNAME")}\"")
+        buildConfigField("String", "SCREENSCRAPER_USER_ID", "\"${screenScraperProperty("SCREENSCRAPER_USER_ID")}\"")
+        buildConfigField("String", "SCREENSCRAPER_USER_PASSWORD", "\"${screenScraperProperty("SCREENSCRAPER_USER_PASSWORD")}\"")
     }
 
     buildTypes {
@@ -36,6 +55,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

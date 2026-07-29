@@ -51,13 +51,19 @@ Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionad
   - `ui/theme/` — tema Compose (paleta escura estilo "Netflix")
   - `data/local/` — Room: `JogoEntity` (metadados do catálogo), `PosseUsuarioEntity` (status pessoal: TENHO/QUERO_TER/NAO_INTERESSA, completude CIB, foto, nota de condição), `JogoComPosse` (relação), DAOs, `AppDatabase`
   - `data/model/StatusPosse.kt` — enum de status de posse
+  - `data/remote/screenscraper/` — camada de rede (Retrofit) para a API v2 do ScreenScraper, esqueleto pronto, ainda não usada pela UI:
+    - `ScreenScraperApi.kt` — interface Retrofit (`systemesListe.php`, `jeuInfos.php`, `jeuRecherche.php`); ID do sistema SNES confirmado = 4
+    - `dto/ScreenScraperDtos.kt` — DTOs kotlinx.serialization fiéis ao JSON da API (campos majoritariamente `String?`, já que a API devolve quase tudo como string)
+    - `NetworkModule.kt` — monta OkHttpClient (com logging interceptor) + Retrofit, sem DI framework
+    - `ScreenScraperCredenciais.kt` — wrapper das credenciais lidas do `BuildConfig`
+    - `ScreenScraperMapper.kt` — converte `JeuDto` em `JogoEntity` (prioridades de região/idioma são decisão de produto, ajustável)
 
 Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso).
 
 ## Status atual
 
 Projeto Android inicial montado e compilando (2026-07-29). Falta:
-- Integrar API do ScreenScraper (Retrofit) para popular `JogoEntity` com a biblioteca completa de jogos de SNES.
+- Integração com API do ScreenScraper: esqueleto de rede pronto (Retrofit + DTOs + mapper), aguardando o usuário obter e configurar as credenciais reais (devid/devpassword) em `local.properties`. Sem credenciais, nenhuma chamada real foi testada ainda; alguns campos (systemesListe.php, "joueurs", "note") ficaram marcados como TODO por falta de confirmação com JSON real.
 - Conectar a tela (`MainActivity`/`TelaBiblioteca`) aos dados reais do Room em vez da lista de exemplo hardcoded.
 - Telas de detalhe do jogo e de edição de status de posse (toggle Tenho/Quero ter/Não interessa, CIB, foto, nota).
 - Cadastro/chave de API do ScreenScraper (ainda não criada).
