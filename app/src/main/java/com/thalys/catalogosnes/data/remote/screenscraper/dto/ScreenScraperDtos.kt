@@ -6,15 +6,20 @@ import kotlinx.serialization.Serializable
 /*
  * DTOs fiéis ao JSON retornado pela API v2 do ScreenScraper (parâmetro output=json).
  *
- * A API do ScreenScraper praticamente não usa números/booleanos no JSON: id, ano, nota
- * etc. vêm como string. Por isso os campos abaixo são String? e a conversão para tipos
- * Kotlin (Long/Int) acontece na camada de mapeamento (ScreenScraperMapper), não aqui.
+ * A API do ScreenScraper majoritariamente não usa números/booleanos no JSON dentro de
+ * jeuInfos.php/jeuRecherche.php: id, ano, nota etc. vêm como string. Por isso os campos
+ * abaixo são String? e a conversão para tipos Kotlin (Long/Int) acontece na camada de
+ * mapeamento (ScreenScraperMapper), não aqui. EXCEÇÃO confirmada: em systemesListe.php o
+ * campo "id" de cada sistema vem como número JSON puro (sem aspas) — daí o `isLenient =
+ * true` no Json do NetworkModule, para essa inconsistência não quebrar o parsing.
  *
- * Estrutura confirmada cruzando implementações de referência que consomem essa mesma API
- * publicamente documentada em screenscraper.fr/webapi2.php: Skyscraper (C++), sscraper
- * (Python) e screech (Go). Os campos "joueurs" (nº de jogadores), "note" (nota média) e o
- * corpo de systemesListe.php (SistemaDto) NÃO puderam ser confirmados com uma amostra real
- * de JSON e ficam marcados como TODO — ver relatório da tarefa.
+ * Estrutura validada em 2026-07-30 com chamadas reais (curl) contra systemesListe.php e
+ * jeuInfos.php (Super Mario World e Chrono Trigger, systemeid=4/SNES), usando credenciais
+ * de desenvolvedor reais. Os campos "joueurs" (nº de jogadores) e "note" (nota média), antes
+ * marcados como TODO, foram confirmados: ambos são objetos simples `{ "text": "..." }`
+ * (ver [TextoSimplesDto]). O corpo de systemesListe.php também foi confirmado: "noms" é um
+ * objeto com chaves fixas por variante de nome (nom_eu, nom_us, nom_jp, ...), não uma lista
+ * region/text como em jeuInfos.php (ver [NomesSistemaDto]).
  */
 
 @Serializable
@@ -47,9 +52,24 @@ data class RefComTextoDto(
     val text: String? = null,
 )
 
+/**
+ * Padrão {text} usado pela API para valores simples sem id associado. Confirmado com JSON
+ * real para os campos "joueurs" (ex: {"text": "1-2"}) e "note" (ex: {"text": "17"}) de
+ * jeuInfos.php.
+ */
+@Serializable
+data class TextoSimplesDto(
+    val text: String? = null,
+)
+
 @Serializable
 data class GeneroDto(
     val id: String? = null,
+    /** Confirmado com JSON real; usado por sscraper/Skyscraper como código curto do gênero. */
+    val nomcourt: String? = null,
+    /** "1" quando é o gênero principal do jogo, "0" caso contrário. */
+    val principale: String? = null,
+    val parentid: String? = null,
     val noms: List<TextoIdiomaDto>? = null,
 )
 
@@ -69,6 +89,8 @@ data class MidiaDto(
     val crc: String? = null,
     val md5: String? = null,
     val sha1: String? = null,
+    /** Tamanho do arquivo de mídia em bytes (como string). Confirmado com JSON real. */
+    val size: String? = null,
     val format: String? = null,
 )
 
@@ -85,6 +107,10 @@ data class JeuDto(
     val editeur: RefComTextoDto? = null,
     val systeme: RefComTextoDto? = null,
     val medias: List<MidiaDto>? = null,
+    /** Nº de jogadores (ex: "1", "1-2"). TODO do CLAUDE.md resolvido: confirmado com JSON real. */
+    val joueurs: TextoSimplesDto? = null,
+    /** Nota média da comunidade (ex: "17", numa escala que a API não documenta claramente aqui). TODO do CLAUDE.md resolvido: confirmado com JSON real. */
+    val note: TextoSimplesDto? = null,
 )
 
 @Serializable
@@ -112,14 +138,37 @@ data class JogoBuscaRespostaDto(
 )
 
 /**
- * TODO: shape não confirmado com amostra real de JSON de systemesListe.php.
- * Estimativa baseada no padrão id/noms observado em outras partes da API
- * (ex: RefComTextoDto). Validar assim que houver credenciais reais.
+ * Nomes de um sistema em systemesListe.php: ao contrário de [JeuDto.noms] (lista
+ * region/text), aqui é um objeto com uma chave fixa por variante de nome. Nem todo sistema
+ * preenche todas as chaves (ex.: SNES não tem "nom_us", só "nom_eu"/"nom_jp"); confirmado
+ * com JSON real de systemesListe.php.
+ */
+@Serializable
+data class NomesSistemaDto(
+    @SerialName("nom_eu") val nomEu: String? = null,
+    @SerialName("nom_us") val nomUs: String? = null,
+    @SerialName("nom_jp") val nomJp: String? = null,
+    @SerialName("nom_recalbox") val nomRecalbox: String? = null,
+    @SerialName("nom_retropie") val nomRetropie: String? = null,
+    @SerialName("nom_launchbox") val nomLaunchbox: String? = null,
+    @SerialName("nom_hyperspin") val nomHyperspin: String? = null,
+    @SerialName("noms_commun") val nomsCommun: String? = null,
+)
+
+/**
+ * Shape confirmado com JSON real de systemesListe.php (2026-07-30, id do sistema SNES = 4).
+ * Diferenças em relação à estimativa anterior: "id" vem como número JSON sem aspas (por
+ * isso o parser usa `isLenient = true`, ver NetworkModule) e "noms" é um objeto de chaves
+ * fixas ([NomesSistemaDto]), não uma lista region/text.
  */
 @Serializable
 data class SistemaDto(
     val id: String? = null,
-    val noms: List<TextoRegionalDto>? = null,
+    val noms: NomesSistemaDto? = null,
+    val compagnie: String? = null,
+    val type: String? = null,
+    val datedebut: String? = null,
+    val datefin: String? = null,
 )
 
 @Serializable

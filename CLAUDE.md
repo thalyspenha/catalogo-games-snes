@@ -58,8 +58,8 @@ Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionad
   - `data/repository/JogoRepository.kt` — expõe `observarBiblioteca()`, `buscarJogo(id)`, `salvarPosse(posse)`, `removerPosse(id)`; não referencia o ScreenScraper (troca de fonte futura não deve exigir mudança em Room/UI/Navigation)
   - `data/remote/screenscraper/` — camada de rede (Retrofit) para a API v2 do ScreenScraper, esqueleto pronto, ainda não usada pela UI (isolada de propósito):
     - `ScreenScraperApi.kt` — interface Retrofit (`systemesListe.php`, `jeuInfos.php`, `jeuRecherche.php`); ID do sistema SNES confirmado = 4
-    - `dto/ScreenScraperDtos.kt` — DTOs kotlinx.serialization fiéis ao JSON da API (campos majoritariamente `String?`, já que a API devolve quase tudo como string)
-    - `NetworkModule.kt` — monta OkHttpClient (com logging interceptor) + Retrofit, sem DI framework
+    - `dto/ScreenScraperDtos.kt` — DTOs kotlinx.serialization fiéis ao JSON da API (campos majoritariamente `String?`, já que a API devolve quase tudo como string); shape validado com JSON real em 2026-07-30 (`systemesListe.php`, `jeuInfos.php`), incluindo `joueurs`/`note` (`TextoSimplesDto`) e `SistemaDto.noms` (`NomesSistemaDto`, objeto de chaves fixas, não lista region/text)
+    - `NetworkModule.kt` — monta OkHttpClient (com logging interceptor) + Retrofit, sem DI framework; `Json { isLenient = true }` porque `systemesListe.php` devolve `id` do sistema como número sem aspas, diferente do resto da API (que usa string)
     - `ScreenScraperCredenciais.kt` — wrapper das credenciais lidas do `BuildConfig`
     - `ScreenScraperMapper.kt` — converte `JeuDto` em `JogoEntity` (prioridades de região/idioma são decisão de produto, ajustável)
 
@@ -67,9 +67,12 @@ Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assemble
 
 ## Status atual
 
-UI funcional consumindo dados reais do Room via seed local (2026-07-30). Biblioteca → detalhe → edição de posse funcionando fim a fim. Falta:
-- Integração com API do ScreenScraper: esqueleto de rede pronto (Retrofit + DTOs + mapper), aguardando o usuário obter e configurar as credenciais reais (devid/devpassword) em `local.properties`. Sem credenciais, nenhuma chamada real foi testada ainda; alguns campos (systemesListe.php, "joueurs", "note") ficaram marcados como TODO por falta de confirmação com JSON real. Quando as credenciais chegarem, trocar a fonte do seed pelo `ScreenScraperMapper` sem mexer em Room/UI/Navigation.
+UI funcional consumindo dados reais do Room via seed local (2026-07-30). Biblioteca → detalhe → edição de posse funcionando fim a fim.
+
+Credenciais reais do ScreenScraper (devid/devpassword) configuradas em `local.properties` (fora do git) e validadas em 2026-07-30 com chamadas reais via curl a `systemesListe.php` e `jeuInfos.php` — funcionando. Atenção: no painel do ScreenScraper a coluna "Usuário Dev" é o `devid` e "Senha" é o `devpassword`; a coluna "Depurar senha" é um valor à parte (debug mode da API, não usado aqui) — já rolou confusão entre os dois uma vez.
+
+Falta:
+- Trocar a fonte de dados da biblioteca do seed local (`jogos_seed.json`, 25 jogos) para uma sincronização em batch via `ScreenScraperMapper`, persistindo no Room (estratégia definida no escopo: baixar uma vez, não bater na API a cada uso). Esqueleto de rede pronto e validado; falta desenhar/implementar o fluxo de sync em si — ainda não iniciado.
 - Carrosséis por categoria (gênero, ano, "meus jogos", "faltam") — hoje a biblioteca é um grid único.
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
 - Filtros e busca na biblioteca.
-- Cadastro/chave de API do ScreenScraper (ainda não criada).

@@ -20,6 +20,11 @@ object NetworkModule {
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
+        // A API é inconsistente quanto a aspas em campos numéricos: em jeuInfos.php os ids
+        // vêm como string ("id": "2144"), mas em systemesListe.php o id do sistema vem como
+        // número puro ("id": 4). Confirmado com JSON real em 2026-07-30. isLenient permite
+        // decodificar um literal numérico não citado em um campo String? sem lançar exceção.
+        isLenient = true
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
