@@ -19,4 +19,7 @@ interface JogoDao {
     @Transaction
     @Query("SELECT * FROM jogos WHERE id = :jogoId")
     suspend fun buscarPorId(jogoId: Long): JogoComPosse?
+
+    @Query("DELETE FROM jogos")
+    suspend fun limparTudo()
 }

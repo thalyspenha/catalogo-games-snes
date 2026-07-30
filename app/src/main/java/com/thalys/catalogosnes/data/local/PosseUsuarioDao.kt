@@ -12,4 +12,7 @@ interface PosseUsuarioDao {
 
     @Query("DELETE FROM posse_usuario WHERE jogoId = :jogoId")
     suspend fun remover(jogoId: Long)
+
+    @Query("DELETE FROM posse_usuario")
+    suspend fun limparTudo()
 }
