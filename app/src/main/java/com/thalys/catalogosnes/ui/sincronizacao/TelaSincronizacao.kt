@@ -52,7 +52,13 @@ fun TelaSincronizacao(
                 is SincronizacaoEstado.EmAndamento -> {
                     Text("${estadoAtual.atual} de ${estadoAtual.total} jogos")
                     LinearProgressIndicator(
-                        progress = { estadoAtual.atual.toFloat() / estadoAtual.total.toFloat() },
+                        progress = {
+                            if (estadoAtual.total > 0) {
+                                estadoAtual.atual.toFloat() / estadoAtual.total.toFloat()
+                            } else {
+                                0f
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text(estadoAtual.nomeJogoAtual, style = MaterialTheme.typography.bodyMedium)
