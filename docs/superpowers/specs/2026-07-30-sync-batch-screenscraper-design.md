@@ -69,7 +69,7 @@ Nenhuma peça existente (`JogoRepository`, `AppDatabase` além da tabela nova, U
 
 ## 1. Pré-processamento do DAT (script externo)
 
-Novo módulo Gradle `:ferramentas` (plugin `kotlin("jvm")`, sem dependência do Android), **não empacotado no APK**, versionado no repo para poder ser re-executado (`./gradlew :ferramentas:run`) se sair uma versão mais nova do DAT No-Intro. Kotlin JVM puro em vez de um script Python/Node porque o ambiente de desenvolvimento usado neste projeto não tem `python3`/`node`/`kotlinc` instalados — só o wrapper do Gradle (que já resolve seu próprio toolchain Kotlin), então reaproveitar o mesmo stack do app é o caminho que realmente roda aqui.
+Novo módulo Gradle `:ferramentas` (plugin `kotlin("jvm")`, sem dependência do Android), **não empacotado no APK**, versionado no repo para poder ser re-executado (`./gradlew :ferramentas:run`) se sair uma versão mais nova do DAT No-Intro. Kotlin JVM puro em vez de um script Python/Node: o ambiente Linux deste projeto é NixOS, onde `python3`/`node` não ficam no PATH direto mas são alcançáveis via `nix-shell -p <pacote> --run` — ou seja, Python era uma opção viável, não uma restrição. A escolha por Kotlin foi por consistência de toolchain (mesma linguagem/build do resto do app, testável com JUnit no mesmo `./gradlew`), não por falta de alternativa.
 
 Passos do script:
 1. Parseia o XML do `.dat` (todas as entradas `<game>`, independente de categoria, para conhecer a relação completa de clones).
