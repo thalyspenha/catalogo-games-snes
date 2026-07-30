@@ -9,10 +9,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.thalys.catalogosnes.ui.biblioteca.TelaBiblioteca
 import com.thalys.catalogosnes.ui.detalhe.TelaDetalheJogo
+import com.thalys.catalogosnes.ui.sincronizacao.TelaSincronizacao
 
 private const val ROTA_BIBLIOTECA = "biblioteca"
 private const val ARGUMENTO_JOGO_ID = "jogoId"
 private const val ROTA_DETALHE = "detalhe/{$ARGUMENTO_JOGO_ID}"
+private const val ROTA_SINCRONIZACAO = "sincronizacao"
 
 /** Grafo de navegação do app: biblioteca (grid principal) -> detalhe/edição de posse de um jogo. */
 @Composable
@@ -21,6 +23,7 @@ fun CatalogoNavHost(navController: NavHostController = rememberNavController()) 
         composable(ROTA_BIBLIOTECA) {
             TelaBiblioteca(
                 aoClicarJogo = { jogoId -> navController.navigate("detalhe/$jogoId") },
+                aoClicarSincronizar = { navController.navigate(ROTA_SINCRONIZACAO) },
             )
         }
         composable(
@@ -32,6 +35,9 @@ fun CatalogoNavHost(navController: NavHostController = rememberNavController()) 
                 jogoId = jogoId,
                 aoVoltar = { navController.popBackStack() },
             )
+        }
+        composable(ROTA_SINCRONIZACAO) {
+            TelaSincronizacao(aoVoltar = { navController.popBackStack() })
         }
     }
 }

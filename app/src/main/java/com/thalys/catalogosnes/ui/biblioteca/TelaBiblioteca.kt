@@ -12,9 +12,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,6 +51,7 @@ import com.thalys.catalogosnes.ui.theme.SnesVermelho
 @Composable
 fun TelaBiblioteca(
     aoClicarJogo: (Long) -> Unit,
+    aoClicarSincronizar: () -> Unit,
     viewModel: BibliotecaViewModel = viewModel(
         factory = BibliotecaViewModel.Factory(LocalContext.current)
     ),
@@ -54,7 +59,16 @@ fun TelaBiblioteca(
     val estado by viewModel.estadoUi.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Catálogo SNES") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Catálogo SNES") },
+                actions = {
+                    IconButton(onClick = aoClicarSincronizar) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Sincronizar catálogo")
+                    }
+                },
+            )
+        }
     ) { paddingInterno ->
         when {
             estado.carregando -> Box(
@@ -135,6 +149,6 @@ private fun SeloStatus(status: StatusPosse, modifier: Modifier = Modifier) {
 @Composable
 private fun PreviewTelaBiblioteca() {
     CatalogoSnesTheme {
-        TelaBiblioteca(aoClicarJogo = {})
+        TelaBiblioteca(aoClicarJogo = {}, aoClicarSincronizar = {})
     }
 }
