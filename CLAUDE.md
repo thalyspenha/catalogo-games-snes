@@ -92,7 +92,9 @@ Task 1/4 concluída: `LinhaCarrossel` ganhou campo `tipo: TipoCategoria` (MEUS_J
 
 Task 2/4 concluída: `TelaBiblioteca.kt` — barra de chips no topo (`BarraDeIndice`, scroll-to via `LazyListState`), corte de 20 por linha + card "Ver tudo", `SeloStatus` virou `internal`. Review aprovado (2 Minor adiados). Compilação intencionalmente quebrada nesta etapa intermediária (só em `CatalogoNavHost.kt`, ainda sem o novo parâmetro `aoClicarVerTudo`) — confirmado.
 
-Task 3/4 concluída: `CategoriaCompletaViewModel.kt` (novo) reaproveita `montarCarrosseis()` da Task 1 pra filtrar a linha certa; `TelaCategoriaCompleta.kt` (novo) — grid de 3 colunas reaproveitando `SeloStatus` da Task 2. Review aprovado (2 Minor adiados, ambos herdados do brief). Compilação segue com o mesmo erro esperado (só `CatalogoNavHost.kt:26`, confirmado de novo). Falta Task 4 (`CatalogoNavHost` — rota `categoria/{titulo}` + wiring final).
+Task 3/4 concluída: `CategoriaCompletaViewModel.kt` (novo) reaproveita `montarCarrosseis()` da Task 1 pra filtrar a linha certa; `TelaCategoriaCompleta.kt` (novo) — grid de 3 colunas reaproveitando `SeloStatus` da Task 2. Review aprovado (2 Minor adiados, ambos herdados do brief). Compilação segue com o mesmo erro esperado (só `CatalogoNavHost.kt:26`, confirmado de novo).
+
+Task 4/4 concluída: `CatalogoNavHost.kt` — rota nova `categoria/{titulo}` (`Uri.encode`/`Uri.decode`), `aoClicarVerTudo` de `TelaBiblioteca` wireado. Compilação voltou 100% limpa, 27 testes verdes. Review aprovado (1 Minor adiado). **As 4 tasks do plano estão concluídas**, falta a revisão final do branch inteiro (próximo passo do subagent-driven-development).
 
 Falta (fora do sync, dos carrosséis e deste índice):
 - Verificar visualmente os carrosséis num device/emulador real (S25) — nunca foi renderizado, só compilado.
