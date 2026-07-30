@@ -13,7 +13,25 @@ O objetivo desta spec é desenhar o fluxo que baixa o catálogo **completo** de 
 
 A API do ScreenScraper **não tem um endpoint para listar todos os jogos de um sistema**. Confirmado em duas fontes: a documentação oficial (`webapi2.php`) só lista endpoints de metadados de referência (gêneros, regiões, mídias, etc.); e o Skyscraper (scraper de referência em C++) identifica jogo por jogo via `jeuInfos.php` com CRC/MD5/nome de arquivo de ROM — nunca lista o catálogo inteiro de um sistema.
 
-Por isso, o sync precisa de uma **lista mestra externa** de jogos oficiais de SNES para guiar, jogo por jogo, as chamadas ao `jeuInfos.php`. O usuário forneceu um DAT No-Intro real (`Nintendo - Super Nintendo Entertainment System.dat`, schema `schema_nointro_datfile_v4.xsd`, versão `20260729-015337`), validado: 4128 entradas `<game>`, das quais 3990 na categoria `Games` (o resto é `Preproduction`/protótipo-beta, `Applications`, `Demos`, `Educational`, `Add-Ons`, `Miscellaneous`) e 2234 com atributo `cloneofid` (variantes regionais/revisões do mesmo jogo).
+Por isso, o sync precisa de uma **lista mestra externa** de jogos oficiais de SNES para guiar, jogo por jogo, as chamadas ao `jeuInfos.php`. O usuário forneceu um DAT No-Intro real (`Nintendo - Super Nintendo Entertainment System.dat`, schema `schema_nointro_datfile_v4.xsd`, versão `20260729-015337`), validado: 4128 entradas `<game>`, cada uma com 1 ou 2 tags `<category>`. Distribuição real dos conjuntos de categoria (contados por `<game>`, não por tag):
+
+| Conjunto de categorias | Qtde |
+|---|---|
+| `Games` (só) | 3314 |
+| `Games, Preproduction` | 662 |
+| `Demos, Games` | 14 |
+| `Applications` | 40 |
+| `Educational` | 19 |
+| `Miscellaneous` | 9 |
+| `Add-Ons` | 9 |
+| `Applications, Preproduction` | 6 |
+| `Educational, Preproduction` | 4 |
+| `Demos` | 4 |
+| `Preproduction, Miscellaneous` | 1 |
+
+Achado importante: **662 entradas trazem `Games` E `Preproduction` ao mesmo tempo** (são os betas/protótipos, ex: `"90 Minutes - European Prime Goal (Europe) (Beta)"` tem `<category>Games</category>` **e** `<category>Preproduction</category>`), e mais 14 trazem `Games`+`Demos`. Um filtro ingênuo "categoria contém Games" deixaria passar 676 betas/demos, contrariando a decisão do usuário de excluir protótipo/beta/demo. O filtro correto é **conjunto de categorias igual a exatamente `{Games}`** (uma única tag, e é `Games`) — resultando em **3314 entradas elegíveis**.
+
+Dessas 3314, **2234 têm atributo `cloneofid`** (variantes regionais/revisões do mesmo jogo). Agrupando por `cloneofid` (ou pelo próprio id quando não tem clone) dentro só das 3314 elegíveis, o número real de jogos únicos é **1763** — esse é o tamanho esperado do catálogo mestre final.
 
 ### Decisões tomadas com o usuário
 
@@ -45,17 +63,24 @@ SincronizacaoViewModel + TelaSincronizacao (nova, ui/sincronizacao/)
 
 Nenhuma peça existente (`JogoRepository`, `AppDatabase` além da tabela nova, UI de biblioteca/detalhe, Navigation existente) muda de comportamento — o sync é aditivo.
 
+### Lacuna encontrada: falta a permissão de INTERNET
+
+`app/src/main/AndroidManifest.xml` não declara `<uses-permission android:name="android.permission.INTERNET" />`. Isso nunca deu problema até agora porque a camada de rede só foi exercitada via `curl` fora do app (ver validação de credenciais de 2026-07-30) — o `./gradlew assembleDebug` compila normalmente sem essa permissão, mas qualquer chamada Retrofit feita de dentro do app instalado falharia em runtime com `SecurityException`. Corrigir isso é pré-requisito para o sync funcionar de verdade no dispositivo, então entra como primeira tarefa do plano.
+
 ## 1. Pré-processamento do DAT (script externo)
 
 Novo módulo Gradle `:ferramentas` (plugin `kotlin("jvm")`, sem dependência do Android), **não empacotado no APK**, versionado no repo para poder ser re-executado (`./gradlew :ferramentas:run`) se sair uma versão mais nova do DAT No-Intro. Kotlin JVM puro em vez de um script Python/Node porque o ambiente de desenvolvimento usado neste projeto não tem `python3`/`node`/`kotlinc` instalados — só o wrapper do Gradle (que já resolve seu próprio toolchain Kotlin), então reaproveitar o mesmo stack do app é o caminho que realmente roda aqui.
 
 Passos do script:
 1. Parseia o XML do `.dat` (todas as entradas `<game>`, independente de categoria, para conhecer a relação completa de clones).
-2. Agrupa por família: a chave do grupo é o `cloneofid` quando existe, ou o próprio `id` do jogo quando não existe (ele é a raiz).
-3. Para cada grupo, filtra os membros que estão na categoria `Games`. Se nenhum membro do grupo estiver em `Games`, o grupo inteiro é descartado (ex: família só tinha beta/protótipo).
-4. Escolhe 1 representante por grupo: preferir o jogo sem `cloneofid` (a raiz) se ele sobreviveu ao filtro de categoria; senão, usar o de menor `id` entre os membros que sobraram.
-5. Do representante, extrai: `romNome` (atributo `name` do `<rom>`), `crc` (atributo `crc` do `<rom>`), `romTamanho` (atributo `size` do `<rom>`, inteiro), `nomeExibicao` (atributo `name` do `<game>`).
-6. Escreve `app/src/main/assets/snes_catalogo_mestre.json` como uma lista JSON desses objetos, ordenada por `nomeExibicao`.
+2. Marca cada `<game>` como elegível se seu conjunto de `<category>` for **exatamente `{Games}`** (uma tag só, e é "Games" — exclui os 662 `Games+Preproduction` e os 14 `Games+Demos`, ver tabela acima).
+3. Agrupa por família: a chave do grupo é o `cloneofid` quando existe, ou o próprio `id` do jogo quando não existe (ele é a raiz).
+4. Para cada grupo, filtra os membros elegíveis (passo 2). Se nenhum membro do grupo for elegível, o grupo inteiro é descartado (ex: família só tinha beta/protótipo/demo).
+5. Escolhe 1 representante por grupo: preferir o jogo sem `cloneofid` (a raiz) se ele for elegível; senão, usar o de menor `id` entre os membros elegíveis que sobraram.
+6. Do representante, extrai: `romNome` (atributo `name` do `<rom>`), `crc` (atributo `crc` do `<rom>`), `romTamanho` (atributo `size` do `<rom>`, inteiro), `nomeExibicao` (atributo `name` do `<game>`).
+7. Escreve `app/src/main/assets/snes_catalogo_mestre.json` como uma lista JSON desses objetos, ordenada por `nomeExibicao`.
+
+Rodando esse algoritmo contra o `.dat` real: **3314 entradas elegíveis → 1763 jogos únicos** no catálogo mestre final (números confirmados por análise do arquivo real durante o planejamento, não uma estimativa).
 
 Formato de saída:
 ```json
