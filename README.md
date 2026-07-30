@@ -1,7 +1,7 @@
 # Catálogo de Jogos SNES
 
 App Android para catalogar jogos de Super Nintendo (SNES). Projeto pessoal, feito para o hobby do
-autor com games retro/repro — não é um produto colaborativo nem open source. Dispositivo de teste
+autor com games retro/repro.Dispositivo de teste
 principal: Samsung Galaxy S25.
 
 A ideia é ter uma biblioteca completa dos jogos de SNES (não só os que o usuário possui), com capa
