@@ -29,7 +29,7 @@ Por isso, o sync precisa de uma **lista mestra externa** de jogos oficiais de SN
 ## Arquitetura
 
 ```
-scripts/gerar_catalogo_mestre_snes.py   (offline, roda manualmente)
+módulo Gradle :ferramentas (Kotlin JVM, offline, roda manualmente)
         │  lê o .dat, filtra categoria "Games", agrupa por cloneofid
         ▼
 app/src/main/assets/snes_catalogo_mestre.json   (novo asset, ~1 entrada por jogo único)
@@ -47,7 +47,7 @@ Nenhuma peça existente (`JogoRepository`, `AppDatabase` além da tabela nova, U
 
 ## 1. Pré-processamento do DAT (script externo)
 
-Novo arquivo `scripts/gerar_catalogo_mestre_snes.py`, **não empacotado no APK**, versionado no repo para poder ser re-executado se sair uma versão mais nova do DAT No-Intro.
+Novo módulo Gradle `:ferramentas` (plugin `kotlin("jvm")`, sem dependência do Android), **não empacotado no APK**, versionado no repo para poder ser re-executado (`./gradlew :ferramentas:run`) se sair uma versão mais nova do DAT No-Intro. Kotlin JVM puro em vez de um script Python/Node porque o ambiente de desenvolvimento usado neste projeto não tem `python3`/`node`/`kotlinc` instalados — só o wrapper do Gradle (que já resolve seu próprio toolchain Kotlin), então reaproveitar o mesmo stack do app é o caminho que realmente roda aqui.
 
 Passos do script:
 1. Parseia o XML do `.dat` (todas as entradas `<game>`, independente de categoria, para conhecer a relação completa de clones).
