@@ -79,14 +79,14 @@ fun TelaBiblioteca(
     fun rolarParaTitulo(titulo: String) {
         val indice = estado.linhas.indexOfFirst { it.titulo == titulo }
         if (indice >= 0) {
-            escopo.launch { listState.animateScrollToItem(indice) }
+            escopo.launch { listState.scrollToItem(indice) }
         }
     }
 
     fun rolarParaPrimeiraDoTipo(tipo: TipoCategoria) {
         val indice = estado.linhas.indexOfFirst { it.tipo == tipo }
         if (indice >= 0) {
-            escopo.launch { listState.animateScrollToItem(indice) }
+            escopo.launch { listState.scrollToItem(indice) }
         }
     }
 
@@ -161,6 +161,9 @@ private fun BarraDeIndice(
     aoAlternarAno: () -> Unit,
     aoEscolherValor: (String) -> Unit,
 ) {
+    val temMeusJogos = linhas.any { it.tipo == TipoCategoria.MEUS_JOGOS }
+    val temFaltam = linhas.any { it.tipo == TipoCategoria.FALTAM }
+
     Column {
         Row(
             modifier = Modifier
@@ -168,8 +171,8 @@ private fun BarraDeIndice(
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
-            AssistChip(onClick = aoTocarMeusJogos, label = { Text("Meus jogos") }, modifier = Modifier.padding(end = 8.dp))
-            AssistChip(onClick = aoTocarFaltam, label = { Text("Faltam") }, modifier = Modifier.padding(end = 8.dp))
+            AssistChip(onClick = aoTocarMeusJogos, enabled = temMeusJogos, label = { Text("Meus jogos") }, modifier = Modifier.padding(end = 8.dp))
+            AssistChip(onClick = aoTocarFaltam, enabled = temFaltam, label = { Text("Faltam") }, modifier = Modifier.padding(end = 8.dp))
             AssistChip(onClick = aoAlternarGenero, label = { Text("Gênero") }, modifier = Modifier.padding(end = 8.dp))
             AssistChip(onClick = aoAlternarAno, label = { Text("Ano") })
         }

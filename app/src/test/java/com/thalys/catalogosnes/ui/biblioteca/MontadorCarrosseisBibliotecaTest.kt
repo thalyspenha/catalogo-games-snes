@@ -90,6 +90,21 @@ class MontadorCarrosseisBibliotecaTest {
     }
 
     @Test
+    fun `jogo com genero em branco cai em sem genero, nao vira linha com titulo vazio`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A", genero = "RPG"), null),
+            JogoComPosse(jogo(2, "B", genero = ""), null),
+            JogoComPosse(jogo(3, "C", genero = "   "), null),
+        )
+
+        val linhas = montarCarrosseis(jogos)
+
+        assertEquals(false, linhas.any { it.titulo.isBlank() })
+        val linhaSemGenero = linhas.first { it.titulo == "Sem gênero" }
+        assertEquals(listOf(2L, 3L), linhaSemGenero.jogos.map { it.jogo.id })
+    }
+
+    @Test
     fun `jogo sem ano cai em sem ano, no fim do bloco de anos`() {
         val jogos = listOf(
             JogoComPosse(jogo(1, "A", ano = 1994), null),

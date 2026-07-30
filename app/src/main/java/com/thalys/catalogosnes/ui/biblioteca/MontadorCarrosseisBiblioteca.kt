@@ -38,7 +38,7 @@ fun montarCarrosseis(jogos: List<JogoComPosse>): List<LinhaCarrossel> {
         linhas += LinhaCarrossel(TITULO_FALTAM, faltam, TipoCategoria.FALTAM)
     }
 
-    val porGenero = jogos.groupBy { it.jogo.genero }
+    val porGenero = jogos.groupBy { it.jogo.genero?.takeIf { genero -> genero.isNotBlank() } }
     porGenero.keys.filterNotNull().sorted().forEach { genero ->
         linhas += LinhaCarrossel(genero, porGenero.getValue(genero), TipoCategoria.GENERO)
     }
