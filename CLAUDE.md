@@ -86,7 +86,9 @@ Fechamento do branch (2026-07-30) via `finishing-a-development-branch`: 17 teste
 
 Task 1/3 concluída: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosseis()`) — função pura que agrupa `List<JogoComPosse>` em linhas (Meus jogos, Faltam, Gêneros A-Z, Anos cronológico), 10 testes JUnit verdes, review aprovado (só 2 achados Minor, adiados).
 
-Task 2/3 concluída: `BibliotecaViewModel` — `BibliotecaUiState.jogos` virou `linhas: List<LinhaCarrossel>`, populado via `montarCarrosseis()`. Review aprovado, sem achados. Compilação intencionalmente quebrada nesta etapa intermediária (só em `TelaBiblioteca.kt`, consumidor ainda não ajustado) — confirmado. Falta Task 3 (`TelaBiblioteca` troca grid por `LazyColumn` de carrosséis).
+Task 2/3 concluída: `BibliotecaViewModel` — `BibliotecaUiState.jogos` virou `linhas: List<LinhaCarrossel>`, populado via `montarCarrosseis()`. Review aprovado, sem achados. Compilação intencionalmente quebrada nesta etapa intermediária (só em `TelaBiblioteca.kt`, consumidor ainda não ajustado) — confirmado.
+
+Task 3/3 concluída: `TelaBiblioteca.kt` — `LazyVerticalGrid` virou `LazyColumn` de `LinhaCarrosselView` (título + `LazyRow` de `CartaoJogo`), navegação pro detalhe preservada. Compilação e testes voltaram a ficar 100% verdes. Review aprovado, só 1 achado Minor (adiado, risco teórico). Sem verificação visual em device (fora do ambiente do subagent) — recomendado checar visualmente antes do merge final. **As 3 tasks do plano estão concluídas**, falta a revisão final do branch inteiro (próximo passo do subagent-driven-development).
 
 Falta (fora do sync e dos carrosséis):
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
