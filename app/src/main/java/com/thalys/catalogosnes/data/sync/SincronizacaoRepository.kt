@@ -13,16 +13,26 @@ import com.thalys.catalogosnes.data.remote.screenscraper.ScreenScraperCredenciai
 import com.thalys.catalogosnes.data.remote.screenscraper.ScreenScraperMapper
 import com.thalys.catalogosnes.data.remote.screenscraper.dto.JeuDto
 import com.thalys.catalogosnes.data.remote.screenscraper.dto.JogoInfoRespostaDto
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
+import retrofit2.HttpException
 
 private const val THROTTLE_MS = 1200L
 private const val MAX_TENTATIVAS_REDE = 3
 private val BACKOFF_MS = listOf(2000L, 4000L)
+
+/** Nº de falhas de rede (exceção/HTTP) seguidas que faz o sync desistir e parar de martelar a API. */
+private const val LIMIAR_FALHAS_REDE_CONSECUTIVAS = 5
+
+/** Códigos HTTP que o ScreenScraper usa para sinalizar limite/cota (visto na documentação da comunidade). */
+private val CODIGOS_HTTP_COTA = setOf(429, 430, 431)
 
 class SincronizacaoRepository(
     private val context: Context,
@@ -36,6 +46,38 @@ class SincronizacaoRepository(
     val estado: StateFlow<SincronizacaoEstado> = _estado.asStateFlow()
 
     suspend fun sincronizar() {
+        // Trava de reentrância simples: se já está em andamento, não inicia outra vez. Fecha a
+        // maior parte da janela em que a UI poderia mostrar Ocioso e permitir um segundo toque
+        // (a checagem em si não é atômica, mas cobre o caso comum de "botão apertado 2x").
+        if (_estado.value is SincronizacaoEstado.EmAndamento) return
+
+        if (!ScreenScraperCredenciais.credenciaisDeDesenvolvedorConfiguradas) {
+            _estado.value = SincronizacaoEstado.Erro(
+                "Credenciais do ScreenScraper não configuradas (devid/devpassword em local.properties)."
+            )
+            return
+        }
+
+        // Fecha a janela visual: já marca "em andamento" antes de qualquer I/O (inclusive antes
+        // do primeiro delay de throttle lá dentro de sincronizarInterno).
+        _estado.value = SincronizacaoEstado.EmAndamento(atual = 0, total = 0, nomeJogoAtual = "")
+
+        try {
+            // CatalogoMestreLoader.carregar faz I/O de asset bloqueante + parse de JSON; sem isso
+            // rodando em Dispatchers.IO, uma chamada a partir do Main (ex: viewModelScope) trava a UI.
+            withContext(Dispatchers.IO) {
+                sincronizarInterno()
+            }
+        } finally {
+            // Se sincronizarInterno saiu sem deixar um estado terminal (Concluido/CotaEsgotada/Erro)
+            // — por exemplo, cancelamento — não deixa a UI travada em "em andamento" pra sempre.
+            if (_estado.value is SincronizacaoEstado.EmAndamento) {
+                _estado.value = SincronizacaoEstado.Ocioso
+            }
+        }
+    }
+
+    private suspend fun sincronizarInterno() {
         val catalogoMestre = CatalogoMestreLoader.carregar(context)
         val totalLinhasStatus = sincronizacaoStatusDao.contarLinhas()
         if (totalLinhasStatus == 0) {
@@ -46,20 +88,26 @@ class SincronizacaoRepository(
         val crcsComSucesso = sincronizacaoStatusDao.buscarCrcsPorStatus(StatusSincronizacao.SUCESSO).toSet()
         val restante = calcularRestante(catalogoMestre, crcsComSucesso)
         val total = catalogoMestre.size
-        var sucesso = crcsComSucesso.size
+        // Imutável: quantos já estavam com SUCESSO antes desta rodada. `sucesso` (mutável, abaixo)
+        // segue crescendo durante o loop e não pode ser usado pra calcular o progresso "atual" —
+        // senão o contador soma duas vezes o que já tinha sido feito antes.
+        val jaConcluidos = crcsComSucesso.size
+        var sucesso = jaConcluidos
+        var falhasRedeConsecutivas = 0
 
         for ((indice, item) in restante.withIndex()) {
             coroutineContext.ensureActive()
             delay(THROTTLE_MS)
 
             _estado.value = SincronizacaoEstado.EmAndamento(
-                atual = sucesso + indice + 1,
+                atual = jaConcluidos + indice + 1,
                 total = total,
                 nomeJogoAtual = item.nomeExibicao,
             )
 
             when (val resultado = buscarComRetry(item)) {
                 is ResultadoBusca.Sucesso -> {
+                    falhasRedeConsecutivas = 0
                     val jogoEntity = ScreenScraperMapper.paraJogoEntity(resultado.jeu)
                     if (jogoEntity == null) {
                         sincronizacaoStatusDao.salvar(
@@ -74,6 +122,7 @@ class SincronizacaoRepository(
                     }
                 }
                 is ResultadoBusca.NaoEncontrado -> {
+                    falhasRedeConsecutivas = 0
                     sincronizacaoStatusDao.salvar(
                         SincronizacaoStatusEntity(item.crc, StatusSincronizacao.FALHA, null, "Jogo não encontrado no ScreenScraper")
                     )
@@ -83,9 +132,17 @@ class SincronizacaoRepository(
                     return
                 }
                 is ResultadoBusca.ErroDeRede -> {
+                    falhasRedeConsecutivas++
                     sincronizacaoStatusDao.salvar(
                         SincronizacaoStatusEntity(item.crc, StatusSincronizacao.FALHA, null, resultado.mensagem)
                     )
+                    // Disjuntor: N erros de rede seguidos é sinal de que algo sistêmico está
+                    // acontecendo (cota esgotada sem o header sinalizar, IP bloqueado, API fora do
+                    // ar) — continuar martelando os itens restantes por horas não ajuda em nada.
+                    if (falhasRedeConsecutivas >= LIMIAR_FALHAS_REDE_CONSECUTIVAS) {
+                        _estado.value = SincronizacaoEstado.CotaEsgotada(sucesso = sucesso, restantes = total - sucesso)
+                        return
+                    }
                 }
             }
         }
@@ -119,6 +176,17 @@ class SincronizacaoRepository(
                 if (cotaEsgotada(resposta)) return ResultadoBusca.CotaEsgotada
                 val jeu = resposta.response?.jeu ?: return ResultadoBusca.NaoEncontrado
                 return ResultadoBusca.Sucesso(jeu)
+            } catch (e: CancellationException) {
+                // Nunca engolir cancelamento: precisa propagar pra estruturada concorrência
+                // (coroutineScope/viewModelScope) reconhecer que o job foi cancelado de verdade,
+                // em vez de retentar 3x um "erro" que na verdade é o usuário saindo da tela.
+                throw e
+            } catch (e: HttpException) {
+                // Sinal direto de cota: a API costuma responder 429/430/431 quando o limite diário
+                // é excedido, e isso vinha caindo no catch genérico (retry inútil por 3 tentativas).
+                if (e.code() in CODIGOS_HTTP_COTA) return ResultadoBusca.CotaEsgotada
+                ultimoErro = "HTTP ${e.code()}: ${e.message()}"
+                if (tentativa < MAX_TENTATIVAS_REDE - 1) delay(BACKOFF_MS[tentativa])
             } catch (e: Exception) {
                 ultimoErro = e.message ?: e.javaClass.simpleName
                 if (tentativa < MAX_TENTATIVAS_REDE - 1) delay(BACKOFF_MS[tentativa])
@@ -151,7 +219,9 @@ class SincronizacaoRepository(
 /**
  * Heurística best-effort pra detectar cota diária esgotada pelo texto de erro do header.
  * O texto exato ainda não foi observado com uma cota real estourada (ver spec) — ajustar
- * aqui se, na prática, a API sinalizar isso de outro jeito.
+ * aqui se, na prática, a API sinalizar isso de outro jeito. Complementada em buscarComRetry
+ * por uma checagem direta de código HTTP (429/430/431) e por um disjuntor de falhas de rede
+ * consecutivas, pros casos em que nem o header nem o código HTTP denunciam a cota.
  */
 internal fun cotaEsgotada(resposta: JogoInfoRespostaDto): Boolean {
     val erro = resposta.header?.error?.lowercase() ?: return false

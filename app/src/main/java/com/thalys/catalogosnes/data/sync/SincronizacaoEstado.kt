@@ -5,6 +5,9 @@ sealed class SincronizacaoEstado {
     data class EmAndamento(val atual: Int, val total: Int, val nomeJogoAtual: String) : SincronizacaoEstado()
     data class Concluido(val sucesso: Int, val falhas: List<FalhaSincronizacao>) : SincronizacaoEstado()
     data class CotaEsgotada(val sucesso: Int, val restantes: Int) : SincronizacaoEstado()
+
+    /** Impede iniciar (ou continuar) o sync: pré-condição não satisfeita (ex: sem credenciais). */
+    data class Erro(val mensagem: String) : SincronizacaoEstado()
 }
 
 data class FalhaSincronizacao(val nomeExibicao: String, val motivo: String)
