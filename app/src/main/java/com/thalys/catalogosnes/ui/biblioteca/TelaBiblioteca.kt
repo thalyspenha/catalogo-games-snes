@@ -4,13 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -44,8 +46,8 @@ import com.thalys.catalogosnes.ui.theme.SnesVerde
 import com.thalys.catalogosnes.ui.theme.SnesVermelho
 
 /**
- * Grid principal da biblioteca (estilo Netflix). Hoje é um grid único; carrosséis por
- * categoria (gênero, ano, "meus jogos", "faltam") ficam para uma evolução futura.
+ * Biblioteca principal (estilo Netflix): carrosséis horizontais por categoria
+ * (Meus jogos, Faltam, Gênero, Ano), montados por [montarCarrosseis].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,17 +82,32 @@ fun TelaBiblioteca(
                 CircularProgressIndicator()
             }
 
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+            else -> LazyColumn(
                 contentPadding = paddingInterno,
-                modifier = Modifier.padding(8.dp),
+                modifier = Modifier.fillMaxSize(),
             ) {
-                items(estado.jogos, key = { it.jogo.id }) { jogoComPosse ->
-                    CartaoJogo(
-                        jogoComPosse = jogoComPosse,
-                        aoClicar = { aoClicarJogo(jogoComPosse.jogo.id) },
-                    )
+                items(estado.linhas, key = { it.titulo }) { linha ->
+                    LinhaCarrosselView(linha = linha, aoClicarJogo = aoClicarJogo)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinhaCarrosselView(linha: LinhaCarrossel, aoClicarJogo: (Long) -> Unit) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(
+            text = linha.titulo,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+            items(linha.jogos, key = { it.jogo.id }) { jogoComPosse ->
+                CartaoJogo(
+                    jogoComPosse = jogoComPosse,
+                    aoClicar = { aoClicarJogo(jogoComPosse.jogo.id) },
+                )
             }
         }
     }
@@ -100,6 +117,7 @@ fun TelaBiblioteca(
 private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
     Card(
         modifier = Modifier
+            .width(120.dp)
             .padding(8.dp)
             .clickable(onClick = aoClicar),
     ) {
