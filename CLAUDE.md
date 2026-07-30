@@ -86,10 +86,11 @@ Fechamento do branch (2026-07-30) via `finishing-a-development-branch`: 17 teste
 
 Resultado: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosseis()`, função pura, 10 testes JUnit) agrupa a biblioteca em Meus jogos / Faltam / Gêneros (A-Z) / Anos (cronológico), com linhas "Sem gênero"/"Sem ano" pros nulos. `BibliotecaViewModel` expõe `BibliotecaUiState.linhas: List<LinhaCarrossel>`. `TelaBiblioteca.kt` trocou `LazyVerticalGrid` por `LazyColumn` de carrosséis (`LinhaCarrosselView` com `LazyRow`), navegação pro detalhe preservada. Revisão final (whole-branch, 2026-07-30) não achou nada Critical; achados Minor (perf de agrupamento na main thread, `LinhaCarrossel` não-`@Immutable` pro Compose, key collision teórica no `LazyColumn`, gap de teste pontual) ficaram parked no ledger como follow-up, não bloquearam o merge.
 
-**Gap de design conhecido, achado na revisão final:** com o catálogo real (1763 jogos), sumiu a forma de navegar o catálogo inteiro — "Faltam" vira uma tira horizontal de ~1700 cards (quase tudo hoje, sem paginação/"ver tudo"), e a linha do ano desejado fica atrás de dezenas de linhas de gênero. Não é bug do código (implementação bate com o spec aprovado), é limitação do próprio design — decisão consciente de virar follow-up em vez de bloquear esta branch. Verificação visual em device também ainda não foi feita (sem emulador disponível durante a implementação via subagent).
+**Índice de navegação e "ver tudo" na biblioteca — em andamento (2026-07-30).** Corrige o gap de design achado na revisão final dos carrosséis (item acima). Spec em `docs/superpowers/specs/2026-07-30-indice-navegacao-biblioteca-design.md`, plano em `docs/superpowers/plans/2026-07-30-indice-navegacao-biblioteca.md`, executado via subagent-driven-development num worktree isolado (`.claude/worktrees/indice-navegacao-biblioteca`, branch `worktree-indice-navegacao-biblioteca`), ledger em `.superpowers/sdd/2026-07-30-indice-navegacao-biblioteca/progress.md` dentro do worktree.
 
-Falta (fora do sync e dos carrosséis):
+Task 1/4 concluída: `LinhaCarrossel` ganhou campo `tipo: TipoCategoria` (MEUS_JOGOS/FALTAM/GENERO/ANO); `mostrarVerTudo()`/`jogosVisiveis()` (cap de 20 por linha) em `MontadorCarrosseisBiblioteca.kt`, 8 testes novos (18 no total), review aprovado (1 Minor adiado). Faltam Task 2 (barra de chips em `TelaBiblioteca`), Task 3 (`TelaCategoriaCompleta`) e Task 4 (`CatalogoNavHost` — rota `categoria/{titulo}`).
+
+Falta (fora do sync, dos carrosséis e deste índice):
 - Verificar visualmente os carrosséis num device/emulador real (S25) — nunca foi renderizado, só compilado.
-- Resolver o gap de navegação do catálogo inteiro (cap por linha + "ver tudo", reordenar Ano antes de Gênero, ou linhas colapsáveis — a decidir).
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
 - Filtros e busca na biblioteca.
