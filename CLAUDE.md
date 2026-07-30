@@ -88,7 +88,9 @@ Resultado: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosse
 
 **Índice de navegação e "ver tudo" na biblioteca — em andamento (2026-07-30).** Corrige o gap de design achado na revisão final dos carrosséis (item acima). Spec em `docs/superpowers/specs/2026-07-30-indice-navegacao-biblioteca-design.md`, plano em `docs/superpowers/plans/2026-07-30-indice-navegacao-biblioteca.md`, executado via subagent-driven-development num worktree isolado (`.claude/worktrees/indice-navegacao-biblioteca`, branch `worktree-indice-navegacao-biblioteca`), ledger em `.superpowers/sdd/2026-07-30-indice-navegacao-biblioteca/progress.md` dentro do worktree.
 
-Task 1/4 concluída: `LinhaCarrossel` ganhou campo `tipo: TipoCategoria` (MEUS_JOGOS/FALTAM/GENERO/ANO); `mostrarVerTudo()`/`jogosVisiveis()` (cap de 20 por linha) em `MontadorCarrosseisBiblioteca.kt`, 8 testes novos (18 no total), review aprovado (1 Minor adiado). Faltam Task 2 (barra de chips em `TelaBiblioteca`), Task 3 (`TelaCategoriaCompleta`) e Task 4 (`CatalogoNavHost` — rota `categoria/{titulo}`).
+Task 1/4 concluída: `LinhaCarrossel` ganhou campo `tipo: TipoCategoria` (MEUS_JOGOS/FALTAM/GENERO/ANO); `mostrarVerTudo()`/`jogosVisiveis()` (cap de 20 por linha) em `MontadorCarrosseisBiblioteca.kt`, 8 testes novos (18 no total), review aprovado (1 Minor adiado).
+
+Task 2/4 concluída: `TelaBiblioteca.kt` — barra de chips no topo (`BarraDeIndice`, scroll-to via `LazyListState`), corte de 20 por linha + card "Ver tudo", `SeloStatus` virou `internal`. Review aprovado (2 Minor adiados). Compilação intencionalmente quebrada nesta etapa intermediária (só em `CatalogoNavHost.kt`, ainda sem o novo parâmetro `aoClicarVerTudo`) — confirmado. Faltam Task 3 (`TelaCategoriaCompleta`) e Task 4 (`CatalogoNavHost` — rota `categoria/{titulo}`).
 
 Falta (fora do sync, dos carrosséis e deste índice):
 - Verificar visualmente os carrosséis num device/emulador real (S25) — nunca foi renderizado, só compilado.
