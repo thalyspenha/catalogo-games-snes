@@ -44,6 +44,8 @@ Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionad
 
 No ambiente Linux (NixOS), `java`/`python3`/`node`/`kotlinc` não ficam no PATH direto, mas são alcançáveis (`nix-shell -p <pacote> --run "<comando>"`, ou apontando pro caminho em `/nix/store`). Toda invocação de `./gradlew` precisa de `JAVA_HOME` apontado manualmente pra um JDK do `/nix/store` (ex: `export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2` — se esse caminho não existir mais, `find /nix/store -maxdepth 1 -iname "*openjdk-21*" -type d` acha o atual).
 
+No Mac (2026-07-30), `java`/`JAVA_HOME` também podem faltar — nesta máquina o Homebrew `openjdk@17` ficou com symlink quebrado em `/Library/Java/JavaVirtualMachines/openjdk-17.jdk`. Workaround que funcionou: usar o JBR (JetBrains Runtime) embutido no Android Studio como `JAVA_HOME`: `/Applications/Android Studio.app/Contents/jbr/Contents/Home` (OpenJDK 21).
+
 ## Estrutura do projeto
 
 - `app/build.gradle.kts` — módulo Android, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 26
@@ -74,11 +76,11 @@ UI funcional consumindo dados reais do Room via seed local (2026-07-30). Bibliot
 
 Credenciais reais do ScreenScraper (devid/devpassword) configuradas em `local.properties` (fora do git) e validadas em 2026-07-30 com chamadas reais via curl a `systemesListe.php` e `jeuInfos.php` — funcionando. Atenção: no painel do ScreenScraper a coluna "Usuário Dev" é o `devid` e "Senha" é o `devpassword`; a coluna "Depurar senha" é um valor à parte (debug mode da API, não usado aqui) — já rolou confusão entre os dois uma vez.
 
-**Sync em batch do catálogo — as 12 tasks de implementação estão concluídas (2026-07-30).** Spec em `docs/superpowers/specs/2026-07-30-sync-batch-screenscraper-design.md`, plano em `docs/superpowers/plans/2026-07-30-sync-batch-screenscraper.md`, executado via subagent-driven-development num worktree isolado (`.claude/worktrees/sync-batch-screenscraper`, branch `worktree-sync-batch-screenscraper`), ledger em `.superpowers/sdd/2026-07-30-sync-batch-screenscraper/progress.md` dentro do worktree.
+**Sync em batch do catálogo — concluído e mergeado em main (2026-07-30).** As 12 tasks de implementação foram feitas via subagent-driven-development num worktree isolado (branch `worktree-sync-batch-screenscraper`); spec em `docs/superpowers/specs/2026-07-30-sync-batch-screenscraper-design.md`, plano em `docs/superpowers/plans/2026-07-30-sync-batch-screenscraper.md`.
 
 Resultado: catálogo mestre real gerado (módulo `:ferramentas` pré-processa o DAT No-Intro → `app/src/main/assets/snes_catalogo_mestre.json`, **1763 jogos únicos**), `SincronizacaoRepository` novo (orquestra throttle/retry/cota/cancelamento contra a API real do ScreenScraper, com checkpoint em Room pra retomar sync interrompido), `TelaSincronizacao` acessível pelo ícone de refresh na `TelaBiblioteca`. `AppDatabase` subiu pra version 2. Projeto ganhou infra de teste JUnit (não tinha nenhuma antes). A Task 9 (`SincronizacaoRepository`) precisou de 1 rodada de fix (revisão em Opus achou 7 Importantes) e ganhou um estado `SincronizacaoEstado.Erro` não previsto no plano original.
 
-**Falta:** a etapa final do skill (revisão de todo o branch + merge via `finishing-a-development-branch`) — deliberadamente adiada pra outra sessão por orçamento de contexto. Nenhuma das 12 tasks precisa ser redespachada.
+Fechamento do branch (2026-07-30) via `finishing-a-development-branch`: 17 testes verdes (`:app` + `:ferramentas`), merge fast-forward pra `main` sem conflito, push feito pro remoto, branch de feature deletado (local e remoto). `main` local e remota agora sincronizadas em `81c18e3`.
 
 Falta (fora do sync):
 - Carrosséis por categoria (gênero, ano, "meus jogos", "faltam") — hoje a biblioteca é um grid único.
