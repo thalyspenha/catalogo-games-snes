@@ -38,9 +38,11 @@ Estratégia: baixar os dados uma vez (batch) e persistir localmente, em vez de b
 
 O projeto é desenvolvido em dois ambientes:
 - macOS (M1) — este Mac
-- Linux — ambiente principal, com Android Studio completo
+- Linux — ambiente principal, com Android Studio completo, rodando **NixOS**
 
 Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionado no git), em vez de depender de memória local do Claude Code, que não é compartilhada entre máquinas.
+
+No ambiente Linux (NixOS), `java`/`python3`/`node`/`kotlinc` não ficam no PATH direto, mas são alcançáveis (`nix-shell -p <pacote> --run "<comando>"`, ou apontando pro caminho em `/nix/store`). Toda invocação de `./gradlew` precisa de `JAVA_HOME` apontado manualmente pra um JDK do `/nix/store` (ex: `export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2` — se esse caminho não existir mais, `find /nix/store -maxdepth 1 -iname "*openjdk-21*" -type d` acha o atual).
 
 ## Estrutura do projeto
 
@@ -62,8 +64,9 @@ Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionad
     - `NetworkModule.kt` — monta OkHttpClient (com logging interceptor) + Retrofit, sem DI framework; `Json { isLenient = true }` porque `systemesListe.php` devolve `id` do sistema como número sem aspas, diferente do resto da API (que usa string)
     - `ScreenScraperCredenciais.kt` — wrapper das credenciais lidas do `BuildConfig`
     - `ScreenScraperMapper.kt` — converte `JeuDto` em `JogoEntity` (prioridades de região/idioma são decisão de produto, ajustável)
+- `ferramentas/` — módulo Gradle separado (Kotlin JVM puro, plugin `id("org.jetbrains.kotlin.jvm")` direto em vez de `alias()` por conflito de classpath com o `kotlin.android` do `:app`), sem dependência do Android, não empacotado no APK. Pré-processa o DAT No-Intro de SNES (`Nintendo - Super Nintendo Entertainment System.dat`, arquivo do usuário fora do repo) num catálogo mestre enxuto. `GerarCatalogoMestreSnes.kt` — `parsearDat()` (XML via `javax.xml.parsers`) + `agruparEDeduplicar()` (filtra categoria == exatamente `{Games}`, agrupa por `cloneofid`, escolhe representante); `ItemCatalogoMestre.kt` — DTO de saída (`romNome`/`crc`/`romTamanho`/`nomeExibicao`). Testado com JUnit (`ferramentas/src/test/kotlin/ferramentas/AgrupamentoClonesTest.kt`). Rodar com `./gradlew :ferramentas:run --args="'<caminho do .dat>' '<caminho de saída .json>'"`.
 
-Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso). Sem DI framework (Hilt/Dagger/Koin) em lugar nenhum — padrão manual `companion object.obterInstancia(context)` reaproveitado em `NetworkModule`, `AppDatabase`, `JogoRepository` e nas Factories dos ViewModels.
+Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso). Sem DI framework (Hilt/Dagger/Koin) em lugar nenhum — padrão manual `companion object.obterInstancia(context)` reaproveitado em `NetworkModule`, `AppDatabase`, `JogoRepository` e nas Factories dos ViewModels. Testes: projeto ganhou infraestrutura de teste (JUnit 4.13.2, `libs.junit`) em 2026-07-30 — antes disso não tinha nenhum teste automatizado. Cobertura é só de lógica pura (parsing/agrupamento/cálculo); nada de Room/Android instrumentado ainda.
 
 ## Status atual
 
@@ -71,8 +74,9 @@ UI funcional consumindo dados reais do Room via seed local (2026-07-30). Bibliot
 
 Credenciais reais do ScreenScraper (devid/devpassword) configuradas em `local.properties` (fora do git) e validadas em 2026-07-30 com chamadas reais via curl a `systemesListe.php` e `jeuInfos.php` — funcionando. Atenção: no painel do ScreenScraper a coluna "Usuário Dev" é o `devid` e "Senha" é o `devpassword`; a coluna "Depurar senha" é um valor à parte (debug mode da API, não usado aqui) — já rolou confusão entre os dois uma vez.
 
-Falta:
-- Trocar a fonte de dados da biblioteca do seed local (`jogos_seed.json`, 25 jogos) para uma sincronização em batch via `ScreenScraperMapper`, persistindo no Room (estratégia definida no escopo: baixar uma vez, não bater na API a cada uso). Esqueleto de rede pronto e validado; falta desenhar/implementar o fluxo de sync em si — ainda não iniciado.
+**Sync em batch do catálogo — em implementação (2026-07-30).** Spec em `docs/superpowers/specs/2026-07-30-sync-batch-screenscraper-design.md`, plano em `docs/superpowers/plans/2026-07-30-sync-batch-screenscraper.md` (12 tasks), sendo executado via subagent-driven-development num worktree isolado (`.claude/worktrees/sync-batch-screenscraper`, branch `worktree-sync-batch-screenscraper`), ledger em `.superpowers/sdd/2026-07-30-sync-batch-screenscraper/progress.md` dentro do worktree. Concluído até aqui: Task 1 (permissão de INTERNET no manifest — faltava, corrigido), Task 2 (infra de teste JUnit), Task 3 (módulo `:ferramentas`, parser/agrupador do DAT No-Intro, testado). Faltam as Tasks 4-12 (gerar o catálogo mestre real de 1763 jogos, tabela Room de status de sync, `SincronizacaoRepository`, tela de sincronização, navegação). Ao retomar, checar o ledger antes de redespachar qualquer task.
+
+Falta (fora do sync):
 - Carrosséis por categoria (gênero, ano, "meus jogos", "faltam") — hoje a biblioteca é um grid único.
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
 - Filtros e busca na biblioteca.
