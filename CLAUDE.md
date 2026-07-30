@@ -47,23 +47,29 @@ Por isso o contexto do projeto fica registrado aqui neste `CLAUDE.md` (versionad
 - `app/build.gradle.kts` — módulo Android, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 26
 - `gradle/libs.versions.toml` — catálogo de versões (Compose BOM 2024.10.01, Room 2.6.1, Retrofit 2.11.0, Coil 2.7.0)
 - `app/src/main/java/com/thalys/catalogosnes/`
-  - `MainActivity.kt` — tela inicial provisória (grid Compose com jogos de exemplo hardcoded, sem dados reais ainda)
+  - `MainActivity.kt` — hospeda só o `CatalogoNavHost` (grid hardcoded antigo foi removido)
   - `ui/theme/` — tema Compose (paleta escura estilo "Netflix")
-  - `data/local/` — Room: `JogoEntity` (metadados do catálogo), `PosseUsuarioEntity` (status pessoal: TENHO/QUERO_TER/NAO_INTERESSA, completude CIB, foto, nota de condição), `JogoComPosse` (relação), DAOs, `AppDatabase`
+  - `ui/biblioteca/` — `TelaBiblioteca` (grid único via `LazyVerticalGrid`, capa via Coil, selo de status) + `BibliotecaViewModel` (observa `JogoRepository.observarBiblioteca()`)
+  - `ui/detalhe/` — `TelaDetalheJogo` (metadados do jogo + edição de posse: seletor Tenho/Quero ter/Não interessa, checkboxes CIB, campo de nota; foto da cópia é placeholder/TODO, sem picker real ainda) + `DetalheJogoViewModel`
+  - `ui/navigation/CatalogoNavHost.kt` — rotas `"biblioteca"` e `"detalhe/{jogoId}"` (Navigation Compose)
+  - `data/local/` — Room: `JogoEntity` (metadados do catálogo), `PosseUsuarioEntity` (status pessoal: TENHO/QUERO_TER/NAO_INTERESSA, completude CIB, foto, nota de condição), `JogoComPosse` (relação), DAOs, `AppDatabase` (com `obterInstancia(context)`, popula seed via `RoomDatabase.Callback.onCreate`)
+  - `data/local/seed/` — `JogoSeedDto.kt` + `SeedLoader.kt`: parseiam `app/src/main/assets/jogos_seed.json` (25 jogos reais de SNES, com `id` fixo) para `List<JogoEntity>`
   - `data/model/StatusPosse.kt` — enum de status de posse
-  - `data/remote/screenscraper/` — camada de rede (Retrofit) para a API v2 do ScreenScraper, esqueleto pronto, ainda não usada pela UI:
+  - `data/repository/JogoRepository.kt` — expõe `observarBiblioteca()`, `buscarJogo(id)`, `salvarPosse(posse)`, `removerPosse(id)`; não referencia o ScreenScraper (troca de fonte futura não deve exigir mudança em Room/UI/Navigation)
+  - `data/remote/screenscraper/` — camada de rede (Retrofit) para a API v2 do ScreenScraper, esqueleto pronto, ainda não usada pela UI (isolada de propósito):
     - `ScreenScraperApi.kt` — interface Retrofit (`systemesListe.php`, `jeuInfos.php`, `jeuRecherche.php`); ID do sistema SNES confirmado = 4
     - `dto/ScreenScraperDtos.kt` — DTOs kotlinx.serialization fiéis ao JSON da API (campos majoritariamente `String?`, já que a API devolve quase tudo como string)
     - `NetworkModule.kt` — monta OkHttpClient (com logging interceptor) + Retrofit, sem DI framework
     - `ScreenScraperCredenciais.kt` — wrapper das credenciais lidas do `BuildConfig`
     - `ScreenScraperMapper.kt` — converte `JeuDto` em `JogoEntity` (prioridades de região/idioma são decisão de produto, ajustável)
 
-Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso).
+Pacote base: `com.thalys.catalogosnes`. Build verificado com `./gradlew assembleDebug` (sucesso). Sem DI framework (Hilt/Dagger/Koin) em lugar nenhum — padrão manual `companion object.obterInstancia(context)` reaproveitado em `NetworkModule`, `AppDatabase`, `JogoRepository` e nas Factories dos ViewModels.
 
 ## Status atual
 
-Projeto Android inicial montado e compilando (2026-07-29). Falta:
-- Integração com API do ScreenScraper: esqueleto de rede pronto (Retrofit + DTOs + mapper), aguardando o usuário obter e configurar as credenciais reais (devid/devpassword) em `local.properties`. Sem credenciais, nenhuma chamada real foi testada ainda; alguns campos (systemesListe.php, "joueurs", "note") ficaram marcados como TODO por falta de confirmação com JSON real.
-- Conectar a tela (`MainActivity`/`TelaBiblioteca`) aos dados reais do Room em vez da lista de exemplo hardcoded.
-- Telas de detalhe do jogo e de edição de status de posse (toggle Tenho/Quero ter/Não interessa, CIB, foto, nota).
+UI funcional consumindo dados reais do Room via seed local (2026-07-30). Biblioteca → detalhe → edição de posse funcionando fim a fim. Falta:
+- Integração com API do ScreenScraper: esqueleto de rede pronto (Retrofit + DTOs + mapper), aguardando o usuário obter e configurar as credenciais reais (devid/devpassword) em `local.properties`. Sem credenciais, nenhuma chamada real foi testada ainda; alguns campos (systemesListe.php, "joueurs", "note") ficaram marcados como TODO por falta de confirmação com JSON real. Quando as credenciais chegarem, trocar a fonte do seed pelo `ScreenScraperMapper` sem mexer em Room/UI/Navigation.
+- Carrosséis por categoria (gênero, ano, "meus jogos", "faltam") — hoje a biblioteca é um grid único.
+- Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
+- Filtros e busca na biblioteca.
 - Cadastro/chave de API do ScreenScraper (ainda não criada).
