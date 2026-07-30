@@ -155,4 +155,76 @@ class MontadorCarrosseisBibliotecaTest {
 
         assertEquals(emptyList<LinhaCarrossel>(), linhas)
     }
+
+    @Test
+    fun `linha de meus jogos tem tipo MEUS_JOGOS`() {
+        val jogos = listOf(JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.TENHO)))
+        val linhas = montarCarrosseis(jogos)
+        assertEquals(TipoCategoria.MEUS_JOGOS, linhas.first { it.titulo == "Meus jogos" }.tipo)
+    }
+
+    @Test
+    fun `linha de faltam tem tipo FALTAM`() {
+        val jogos = listOf(JogoComPosse(jogo(1, "A"), null))
+        val linhas = montarCarrosseis(jogos)
+        assertEquals(TipoCategoria.FALTAM, linhas.first { it.titulo == "Faltam" }.tipo)
+    }
+
+    @Test
+    fun `linhas de genero e sem genero tem tipo GENERO`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A", genero = "RPG"), null),
+            JogoComPosse(jogo(2, "B", genero = null), null),
+        )
+        val linhas = montarCarrosseis(jogos)
+        assertEquals(TipoCategoria.GENERO, linhas.first { it.titulo == "RPG" }.tipo)
+        assertEquals(TipoCategoria.GENERO, linhas.first { it.titulo == "Sem gênero" }.tipo)
+    }
+
+    @Test
+    fun `linhas de ano e sem ano tem tipo ANO`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A", ano = 1994), null),
+            JogoComPosse(jogo(2, "B", ano = null), null),
+        )
+        val linhas = montarCarrosseis(jogos)
+        assertEquals(TipoCategoria.ANO, linhas.first { it.titulo == "1994" }.tipo)
+        assertEquals(TipoCategoria.ANO, linhas.first { it.titulo == "Sem ano" }.tipo)
+    }
+
+    @Test
+    fun `mostrarVerTudo false com 20 jogos ou menos`() {
+        val linha = LinhaCarrossel(
+            titulo = "X",
+            jogos = List(20) { i -> JogoComPosse(jogo(i.toLong(), "J$i"), null) },
+            tipo = TipoCategoria.GENERO,
+        )
+        assertEquals(false, mostrarVerTudo(linha))
+    }
+
+    @Test
+    fun `mostrarVerTudo true com mais de 20 jogos`() {
+        val linha = LinhaCarrossel(
+            titulo = "X",
+            jogos = List(21) { i -> JogoComPosse(jogo(i.toLong(), "J$i"), null) },
+            tipo = TipoCategoria.GENERO,
+        )
+        assertEquals(true, mostrarVerTudo(linha))
+    }
+
+    @Test
+    fun `jogosVisiveis retorna lista inteira quando dentro do cap`() {
+        val jogos = List(15) { i -> JogoComPosse(jogo(i.toLong(), "J$i"), null) }
+        val linha = LinhaCarrossel(titulo = "X", jogos = jogos, tipo = TipoCategoria.GENERO)
+        assertEquals(15, jogosVisiveis(linha).size)
+    }
+
+    @Test
+    fun `jogosVisiveis corta nos primeiros 20 quando passa do cap`() {
+        val jogos = List(25) { i -> JogoComPosse(jogo(i.toLong(), "J$i"), null) }
+        val linha = LinhaCarrossel(titulo = "X", jogos = jogos, tipo = TipoCategoria.GENERO)
+        val visiveis = jogosVisiveis(linha)
+        assertEquals(20, visiveis.size)
+        assertEquals((0..19).map { it.toLong() }, visiveis.map { it.jogo.id })
+    }
 }
