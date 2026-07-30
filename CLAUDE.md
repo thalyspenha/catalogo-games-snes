@@ -82,7 +82,10 @@ Resultado: catálogo mestre real gerado (módulo `:ferramentas` pré-processa o 
 
 Fechamento do branch (2026-07-30) via `finishing-a-development-branch`: 17 testes verdes (`:app` + `:ferramentas`), merge fast-forward pra `main` sem conflito, push feito pro remoto, branch de feature deletado (local e remoto). `main` local e remota agora sincronizadas em `81c18e3`.
 
-Falta (fora do sync):
-- Carrosséis por categoria (gênero, ano, "meus jogos", "faltam") — hoje a biblioteca é um grid único.
+**Carrosséis por categoria na biblioteca — em andamento (2026-07-30).** Spec em `docs/superpowers/specs/2026-07-30-carrosseis-biblioteca-design.md`, plano em `docs/superpowers/plans/2026-07-30-carrosseis-biblioteca.md`, executado via subagent-driven-development num worktree isolado (`.claude/worktrees/carrosseis-biblioteca`, branch `worktree-carrosseis-biblioteca`), ledger em `.superpowers/sdd/2026-07-30-carrosseis-biblioteca/progress.md` dentro do worktree.
+
+Task 1/3 concluída: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosseis()`) — função pura que agrupa `List<JogoComPosse>` em linhas (Meus jogos, Faltam, Gêneros A-Z, Anos cronológico), 10 testes JUnit verdes, review aprovado (só 2 achados Minor, adiados). Faltam Task 2 (`BibliotecaViewModel` expõe `List<LinhaCarrossel>`) e Task 3 (`TelaBiblioteca` troca grid por `LazyColumn` de carrosséis).
+
+Falta (fora do sync e dos carrosséis):
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
 - Filtros e busca na biblioteca.
