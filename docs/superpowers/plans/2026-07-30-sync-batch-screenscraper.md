@@ -867,7 +867,7 @@ git commit -m "feat: calcularRestante — catálogo mestre menos crcs já sincro
 
 **Interfaces:**
 - Consumes: `CatalogoMestreLoader`, `calcularRestante` (Tasks 7-8); `JogoDao`, `PosseUsuarioDao`, `SincronizacaoStatusDao`, `AppDatabase.obterInstancia` (Tasks 5-6); `ScreenScraperApi`, `ScreenScraperCredenciais`, `NetworkModule`, `ScreenScraperMapper` (já existentes).
-- Produces: `sealed class SincronizacaoEstado { Ocioso, EmAndamento(atual, total, nomeJogoAtual), Concluido(sucesso, falhas: List<FalhaSincronizacao>), CotaEsgotada(sucesso, restantes) }`, `data class FalhaSincronizacao(val nomeExibicao: String, val motivo: String)`, `SincronizacaoRepository.estado: StateFlow<SincronizacaoEstado>`, `suspend fun SincronizacaoRepository.sincronizar()`, `SincronizacaoRepository.obterInstancia(context): SincronizacaoRepository` — usados por `SincronizacaoViewModel` na Task 10.
+- Produces: `sealed class SincronizacaoEstado { Ocioso, EmAndamento(atual, total, nomeJogoAtual), Concluido(sucesso, falhas: List<FalhaSincronizacao>), CotaEsgotada(sucesso, restantes), Erro(mensagem) }` (o caso `Erro` foi acrescentado na rodada de fix da revisão — sinaliza pré-condição não satisfeita, ex: sem credenciais configuradas), `data class FalhaSincronizacao(val nomeExibicao: String, val motivo: String)`, `SincronizacaoRepository.estado: StateFlow<SincronizacaoEstado>`, `suspend fun SincronizacaoRepository.sincronizar()`, `SincronizacaoRepository.obterInstancia(context): SincronizacaoRepository` — usados por `SincronizacaoViewModel` na Task 10.
 
 - [ ] **Step 1: Criar os estados**
 
@@ -881,10 +881,15 @@ sealed class SincronizacaoEstado {
     data class EmAndamento(val atual: Int, val total: Int, val nomeJogoAtual: String) : SincronizacaoEstado()
     data class Concluido(val sucesso: Int, val falhas: List<FalhaSincronizacao>) : SincronizacaoEstado()
     data class CotaEsgotada(val sucesso: Int, val restantes: Int) : SincronizacaoEstado()
+
+    /** Impede iniciar (ou continuar) o sync: pré-condição não satisfeita (ex: sem credenciais). */
+    data class Erro(val mensagem: String) : SincronizacaoEstado()
 }
 
 data class FalhaSincronizacao(val nomeExibicao: String, val motivo: String)
 ```
+
+**Nota (adicionada após revisão da Task 9):** o estado `Erro` foi acrescentado durante a rodada de fix da Task 9 (achado: sync não checava `ScreenScraperCredenciais.credenciaisDeDesenvolvedorConfiguradas` antes de limpar o catálogo). `CotaEsgotada` também passou a ser emitido por um disjuntor de falhas de rede consecutivas (não só por detecção literal de cota na resposta), então seu texto na UI não deve dizer "cota esgotada" de forma tão específica — ver Task 11 abaixo.
 
 - [ ] **Step 2: Escrever o teste da heurística de cota esgotada (falha primeiro)**
 
@@ -1301,8 +1306,12 @@ fun TelaSincronizacao(
                 }
 
                 is SincronizacaoEstado.CotaEsgotada -> {
-                    Text("Cota diária da API do ScreenScraper esgotada. Tente novamente mais tarde.")
+                    Text("Cota diária da API esgotada ou muitas falhas de rede seguidas. Tente novamente mais tarde.")
                     Text("${estadoAtual.sucesso} sincronizados até agora, ${estadoAtual.restantes} restantes.")
+                }
+
+                is SincronizacaoEstado.Erro -> {
+                    Text(estadoAtual.mensagem)
                 }
             }
         }
