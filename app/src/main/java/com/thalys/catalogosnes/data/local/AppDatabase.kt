@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.thalys.catalogosnes.data.local.seed.SeedLoader
 import kotlinx.coroutines.CoroutineScope
@@ -11,19 +12,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [JogoEntity::class, PosseUsuarioEntity::class],
-    version = 1,
+    entities = [JogoEntity::class, PosseUsuarioEntity::class, SincronizacaoStatusEntity::class],
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun jogoDao(): JogoDao
     abstract fun posseUsuarioDao(): PosseUsuarioDao
+    abstract fun sincronizacaoStatusDao(): SincronizacaoStatusDao
 
     companion object {
         private const val NOME_BANCO = "catalogo_snes.db"
 
         @Volatile
         private var instancia: AppDatabase? = null
+
+        private val MIGRACAO_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS sincronizacao_status (
+                        crc TEXT NOT NULL PRIMARY KEY,
+                        status TEXT NOT NULL,
+                        jogoId INTEGER,
+                        mensagemErro TEXT
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
 
         /**
          * Singleton simples (sem framework de DI, mesmo padrão do NetworkModule).
@@ -52,6 +69,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
             db = Room.databaseBuilder(context, AppDatabase::class.java, NOME_BANCO)
                 .addCallback(callbackDeSeed)
+                .addMigrations(MIGRACAO_1_2)
                 .build()
             return db
         }
