@@ -84,7 +84,9 @@ Fechamento do branch (2026-07-30) via `finishing-a-development-branch`: 17 teste
 
 **Carrosséis por categoria na biblioteca — em andamento (2026-07-30).** Spec em `docs/superpowers/specs/2026-07-30-carrosseis-biblioteca-design.md`, plano em `docs/superpowers/plans/2026-07-30-carrosseis-biblioteca.md`, executado via subagent-driven-development num worktree isolado (`.claude/worktrees/carrosseis-biblioteca`, branch `worktree-carrosseis-biblioteca`), ledger em `.superpowers/sdd/2026-07-30-carrosseis-biblioteca/progress.md` dentro do worktree.
 
-Task 1/3 concluída: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosseis()`) — função pura que agrupa `List<JogoComPosse>` em linhas (Meus jogos, Faltam, Gêneros A-Z, Anos cronológico), 10 testes JUnit verdes, review aprovado (só 2 achados Minor, adiados). Faltam Task 2 (`BibliotecaViewModel` expõe `List<LinhaCarrossel>`) e Task 3 (`TelaBiblioteca` troca grid por `LazyColumn` de carrosséis).
+Task 1/3 concluída: `MontadorCarrosseisBiblioteca.kt` (`LinhaCarrossel` + `montarCarrosseis()`) — função pura que agrupa `List<JogoComPosse>` em linhas (Meus jogos, Faltam, Gêneros A-Z, Anos cronológico), 10 testes JUnit verdes, review aprovado (só 2 achados Minor, adiados).
+
+Task 2/3 concluída: `BibliotecaViewModel` — `BibliotecaUiState.jogos` virou `linhas: List<LinhaCarrossel>`, populado via `montarCarrosseis()`. Review aprovado, sem achados. Compilação intencionalmente quebrada nesta etapa intermediária (só em `TelaBiblioteca.kt`, consumidor ainda não ajustado) — confirmado. Falta Task 3 (`TelaBiblioteca` troca grid por `LazyColumn` de carrosséis).
 
 Falta (fora do sync e dos carrosséis):
 - Captura/seleção de foto da própria cópia do jogo (campo já existe no modelo, falta a UI de câmera/picker).
