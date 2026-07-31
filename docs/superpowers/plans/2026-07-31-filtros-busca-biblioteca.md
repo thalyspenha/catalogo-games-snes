@@ -223,7 +223,7 @@ git commit -m "refactor: extrai GridDeJogos compartilhado de TelaCategoriaComple
 
 Sem teste automatizado (ver Global Constraints); verificação é por compilação + Task 5.
 
-- [ ] **Step 1: Atualizar `BibliotecaUiState` e o `ViewModel` pra combinar lista + consulta**
+- [x] **Step 1: Atualizar `BibliotecaUiState` e o `ViewModel` pra combinar lista + consulta**
 
 Substituir o conteúdo de `BibliotecaViewModel.kt` inteiro por:
 
@@ -297,7 +297,7 @@ class BibliotecaViewModel(
 }
 ```
 
-- [ ] **Step 2: Compilar**
+- [x] **Step 2: Compilar**
 
 Run:
 ```bash
@@ -306,7 +306,7 @@ export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/main/java/com/thalys/catalogosnes/ui/biblioteca/BibliotecaViewModel.kt
