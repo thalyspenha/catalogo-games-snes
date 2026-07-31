@@ -352,7 +352,7 @@ git commit -m "feat: UI usa capa local (offline) com fallback pra URL remota"
 
 **Atenção:** o Step 2 abaixo apaga todos os dados locais do app no device (`pm clear`) pra forçar uma sincronização do zero — é a única forma de testar o caminho novo de download, já que os 5 jogos já sincronizados antes desta mudança ficam marcados `SUCESSO` no checkpoint e não seriam reprocessados numa sincronização normal. Como hoje só existem esses 5 jogos de teste (sem posse marcada), isso é seguro; se no futuro isso rodar com dados reais do usuário, `pm clear` não seria apropriado.
 
-- [ ] **Step 1: Build e instalar**
+- [x] **Step 1: Build e instalar**
 
 ```bash
 cd /home/thalys/Projetos/Pessoal/catalogo-games-snes
@@ -362,7 +362,7 @@ adb -s RQCY70208AF install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 Expected: `BUILD SUCCESSFUL`, `Success` no install.
 
-- [ ] **Step 2: Limpar dados do app pra forçar sincronização do zero**
+- [x] **Step 2: Limpar dados do app pra forçar sincronização do zero**
 
 ```bash
 adb -s RQCY70208AF shell pm clear com.thalys.catalogosnes
@@ -370,11 +370,11 @@ adb -s RQCY70208AF shell am start -n com.thalys.catalogosnes/.MainActivity
 ```
 Expected: app abre com a biblioteca vazia (banco recriado do zero, seed de 25 jogos populada via `onCreate`).
 
-- [ ] **Step 3: Rodar a sincronização por tempo suficiente pra alguns jogos completarem**
+- [x] **Step 3: Rodar a sincronização por tempo suficiente pra alguns jogos completarem**
 
 Achar o ícone de sincronizar via `adb shell uiautomator dump` (`content-desc="Sincronizar catálogo"`), tocar; na tela seguinte, tocar em "Iniciar sincronização". Esperar uns 20-30 segundos (throttle de 1,2s por item + tempo de rede cobre uns 10+ itens nesse intervalo), depois voltar pra biblioteca (não precisa esperar terminar).
 
-- [ ] **Step 4: Confirmar no banco que `caminhoCapaLocal` foi preenchido**
+- [x] **Step 4: Confirmar no banco que `caminhoCapaLocal` foi preenchido**
 
 ```bash
 adb -s RQCY70208AF exec-out run-as com.thalys.catalogosnes cat databases/catalogo_snes.db > /tmp/claude-1000/-home-thalys-Projetos-Pessoal-catalogo-games-snes/41c8e63f-e8fc-4981-9907-3ca1302e4b0a/scratchpad/verificacao_capas.db
@@ -384,7 +384,7 @@ Expected: pelo menos algumas linhas com `caminhoCapaLocal` não-nulo, apontando 
 
 (Nota: se o `.db` sozinho vier vazio, o banco está em modo WAL — repetir puxando também `-wal`/`-shm` juntos, como nas investigações anteriores desta sessão.)
 
-- [ ] **Step 5: Desligar internet e reabrir o app**
+- [x] **Step 5: Desligar internet e reabrir o app**
 
 ```bash
 adb -s RQCY70208AF shell svc wifi disable
@@ -398,14 +398,14 @@ adb -s RQCY70208AF shell rm /sdcard/capas_offline.png
 ```
 Ler o screenshot e confirmar: as capas dos jogos já sincronizados aparecem normalmente, mesmo sem internet — isso é o teste que falhava antes desta mudança (reproduzindo o teste que o usuário fez manualmente).
 
-- [ ] **Step 6: Checar logcat por crash em todo o fluxo**
+- [x] **Step 6: Checar logcat por crash em todo o fluxo**
 
 ```bash
 adb -s RQCY70208AF logcat -d -t 500 | grep -iE "AndroidRuntime|FATAL|catalogosnes.*Exception" || echo "sem erros"
 ```
 Expected: `sem erros` (ou nenhuma linha relevante).
 
-- [ ] **Step 7: Religar internet**
+- [x] **Step 7: Religar internet**
 
 ```bash
 adb -s RQCY70208AF shell svc wifi enable
