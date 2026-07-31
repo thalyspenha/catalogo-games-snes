@@ -30,7 +30,7 @@
 - Consumes: `JogoComPosse` (de `com.thalys.catalogosnes.data.local`, já importado no arquivo de teste), campo `jogo.nome: String`.
 - Produces: `fun filtrarPorNome(jogos: List<JogoComPosse>, consulta: String): List<JogoComPosse>` — pacote `com.thalys.catalogosnes.ui.biblioteca` (usado pela Task 3).
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar ao final da classe `MontadorCarrosseisBibliotecaTest` (antes do `}` de fechamento, depois do teste `jogosVisiveis corta nos primeiros 20 quando passa do cap`), reaproveitando o helper `jogo(...)` já definido no topo da classe:
 
@@ -63,7 +63,7 @@ Adicionar ao final da classe `MontadorCarrosseisBibliotecaTest` (antes do `}` de
     }
 ```
 
-- [ ] **Step 2: Rodar os testes e confirmar que falham (função não existe ainda)**
+- [x] **Step 2: Rodar os testes e confirmar que falham (função não existe ainda)**
 
 Run:
 ```bash
@@ -73,7 +73,7 @@ export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2
 ```
 Expected: FAIL — erro de compilação, `filtrarPorNome` não resolvido.
 
-- [ ] **Step 3: Implementar `filtrarPorNome`**
+- [x] **Step 3: Implementar `filtrarPorNome`**
 
 Adicionar ao final de `MontadorCarrosseisBiblioteca.kt` (depois da função `jogosVisiveis`):
 
@@ -89,7 +89,7 @@ fun filtrarPorNome(jogos: List<JogoComPosse>, consulta: String): List<JogoComPos
 }
 ```
 
-- [ ] **Step 4: Rodar os testes e confirmar que passam**
+- [x] **Step 4: Rodar os testes e confirmar que passam**
 
 Run:
 ```bash
@@ -98,7 +98,7 @@ export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2
 ```
 Expected: PASS — todos os testes da classe (os existentes + os 3 novos).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/src/main/java/com/thalys/catalogosnes/ui/biblioteca/MontadorCarrosseisBiblioteca.kt app/src/test/java/com/thalys/catalogosnes/ui/biblioteca/MontadorCarrosseisBibliotecaTest.kt
