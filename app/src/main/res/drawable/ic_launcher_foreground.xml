@@ -1,16 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Ícone do app: os quatro botões frontais do controle de SNES / Super Famicom
+    em losango (X no topo, Y à esquerda, A à direita, B embaixo), assentados num
+    encaixe rebaixado em forma de trevo.
+
+    Toda a silhueta essencial cabe no círculo seguro de 66dp centrado em (54,54):
+    extensão máxima = 18.6 (deslocamento do losango) + 14 (raio do encaixe) = 32.6 < 33.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Encaixe rebaixado: quatro círculos que se fundem num trevo, com o miolo preenchido -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M34,44 h10 v10 h10 v10 h-10 v10 h-10 v-10 h-10 v-10 h10 z" />
+        android:fillColor="@color/ic_launcher_encaixe"
+        android:pathData="M54,35.4 m-14,0 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M66,50 m-6,0 a6,6 0,1 1,12 0 a6,6 0,1 1,-12 0" />
+        android:fillColor="@color/ic_launcher_encaixe"
+        android:pathData="M35.4,54 m-14,0 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M80,58 m-6,0 a6,6 0,1 1,12 0 a6,6 0,1 1,-12 0" />
+        android:fillColor="@color/ic_launcher_encaixe"
+        android:pathData="M72.6,54 m-14,0 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0" />
+    <path
+        android:fillColor="@color/ic_launcher_encaixe"
+        android:pathData="M54,72.6 m-14,0 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0" />
+    <path
+        android:fillColor="@color/ic_launcher_encaixe"
+        android:pathData="M54,54 m-9,0 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0" />
+
+    <!-- Botão X (topo, azul) -->
+    <path
+        android:fillColor="@color/ic_launcher_botao_x"
+        android:pathData="M54,35.4 m-11.2,0 a11.2,11.2 0 1,1 22.4,0 a11.2,11.2 0 1,1 -22.4,0" />
+    <!-- Botão Y (esquerda, verde) -->
+    <path
+        android:fillColor="@color/ic_launcher_botao_y"
+        android:pathData="M35.4,54 m-11.2,0 a11.2,11.2 0 1,1 22.4,0 a11.2,11.2 0 1,1 -22.4,0" />
+    <!-- Botão A (direita, vermelho) -->
+    <path
+        android:fillColor="@color/ic_launcher_botao_a"
+        android:pathData="M72.6,54 m-11.2,0 a11.2,11.2 0 1,1 22.4,0 a11.2,11.2 0 1,1 -22.4,0" />
+    <!-- Botão B (embaixo, amarelo) -->
+    <path
+        android:fillColor="@color/ic_launcher_botao_b"
+        android:pathData="M54,72.6 m-11.2,0 a11.2,11.2 0 1,1 22.4,0 a11.2,11.2 0 1,1 -22.4,0" />
+
+    <!-- Letras gravadas nos botões (traço, sem preenchimento) -->
+    <!-- X -->
+    <path
+        android:pathData="M49.33,30.17 L58.67,40.63"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M58.67,30.17 L49.33,40.63"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Y -->
+    <path
+        android:pathData="M30.73,48.77 L35.4,54.2"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M40.07,48.77 L35.4,54.2"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M35.4,54.2 L35.4,59.23"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- A -->
+    <path
+        android:pathData="M67.93,59.23 L72.6,48.77"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M77.27,59.23 L72.6,48.77"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M70.1,55.1 L75.1,55.1"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- B -->
+    <path
+        android:pathData="M50,67.37 L50,77.83"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M50,67.37 L54.6,67.37 A 2.615,2.615 0 0 1 54.6,72.6 L50,72.6"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M50,72.6 L55.2,72.6 A 2.615,2.615 0 0 1 55.2,77.83 L50,77.83"
+        android:strokeColor="@color/ic_launcher_encaixe"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

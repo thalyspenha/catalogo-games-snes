@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Fundo do ícone adaptativo (SnesRoxo) -->
     <color name="ic_launcher_background">#2B1B4C</color>
+
+    <!-- Encaixe rebaixado onde os botões assentam (SnesSuperficie) -->
+    <color name="ic_launcher_encaixe">#1C1926</color>
+
+    <!-- Cores dos quatro botões frontais do controle de SNES / Super Famicom -->
+    <color name="ic_launcher_botao_x">#4A90E2</color>
+    <color name="ic_launcher_botao_y">#3CB371</color>
+    <color name="ic_launcher_botao_a">#E74C3C</color>
+    <color name="ic_launcher_botao_b">#F2C230</color>
 </resources>
