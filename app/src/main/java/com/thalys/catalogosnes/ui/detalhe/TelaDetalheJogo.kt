@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.thalys.catalogosnes.data.local.modeloCapa
 import com.thalys.catalogosnes.data.model.StatusPosse
 
 /**
@@ -95,7 +96,7 @@ fun TelaDetalheJogo(
                     .padding(16.dp),
             ) {
                 AsyncImage(
-                    model = estado.jogo?.urlCapa,
+                    model = estado.jogo?.modeloCapa(),
                     contentDescription = estado.jogo?.nome,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

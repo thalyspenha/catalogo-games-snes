@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.thalys.catalogosnes.data.local.JogoComPosse
+import com.thalys.catalogosnes.data.local.modeloCapa
 import com.thalys.catalogosnes.data.model.StatusPosse
 import com.thalys.catalogosnes.ui.theme.CatalogoSnesTheme
 import com.thalys.catalogosnes.ui.theme.SnesRoxoClaro
@@ -314,7 +315,7 @@ private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
     ) {
         Box {
             AsyncImage(
-                model = jogoComPosse.jogo.urlCapa,
+                model = jogoComPosse.jogo.modeloCapa(),
                 contentDescription = jogoComPosse.jogo.nome,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
