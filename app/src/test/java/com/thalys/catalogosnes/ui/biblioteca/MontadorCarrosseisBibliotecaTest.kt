@@ -269,4 +269,14 @@ class MontadorCarrosseisBibliotecaTest {
         assertEquals(jogos, filtrarPorNome(jogos, ""))
         assertEquals(jogos, filtrarPorNome(jogos, "   "))
     }
+
+    @Test
+    fun `filtrarPorNome ignora espaco no inicio e fim da consulta`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "The Legend of Zelda: A Link to the Past"), null),
+            JogoComPosse(jogo(2, "Chrono Trigger"), null),
+        )
+        val resultado = filtrarPorNome(jogos, "zelda ")
+        assertEquals(listOf(1L), resultado.map { it.jogo.id })
+    }
 }

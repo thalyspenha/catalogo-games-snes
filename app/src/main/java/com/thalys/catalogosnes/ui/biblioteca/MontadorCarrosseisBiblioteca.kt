@@ -71,6 +71,7 @@ fun jogosVisiveis(linha: LinhaCarrossel, cap: Int = CAP_PADRAO_POR_LINHA): List<
  * quando vazio" fica em quem chama.
  */
 fun filtrarPorNome(jogos: List<JogoComPosse>, consulta: String): List<JogoComPosse> {
-    if (consulta.isBlank()) return jogos
-    return jogos.filter { it.jogo.nome.contains(consulta, ignoreCase = true) }
+    val termo = consulta.trim()
+    if (termo.isEmpty()) return jogos
+    return jogos.filter { it.jogo.nome.contains(termo, ignoreCase = true) }
 }
