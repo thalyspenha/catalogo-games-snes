@@ -465,7 +465,7 @@ git commit -m "feat: UI de busca na TelaBiblioteca (ícone de lupa + grid de res
 - Consumes: app completo (Tasks 1-4).
 - Produces: evidência visual (screenshots) confirmando a feature funcionando no device real; nenhuma interface de código.
 
-- [ ] **Step 1: Build e instalar**
+- [x] **Step 1: Build e instalar**
 
 ```bash
 cd /home/thalys/Projetos/Pessoal/catalogo-games-snes
@@ -477,7 +477,7 @@ adb -s RQCY70208AF shell am start -n com.thalys.catalogosnes/.MainActivity
 ```
 Expected: `BUILD SUCCESSFUL`, `Success` no install, app abre sem crash.
 
-- [ ] **Step 2: Abrir a busca e digitar uma consulta que bate em algum jogo já sincronizado no device**
+- [x] **Step 2: Abrir a busca e digitar uma consulta que bate em algum jogo já sincronizado no device**
 
 Usar `adb shell uiautomator dump` pra achar o ícone com `content-desc="Buscar jogo"` (bounds → tap no centro). Depois tocar no campo de texto (área do título) pra focar, digitar via `adb shell input text "<termo>"` — usar um termo que bata em algum dos jogos já sincronizados nesse device (ex: um dos 5 sincronizados no teste da sessão anterior, ou qualquer termo genérico se o catálogo tiver mais dados). Tirar screenshot:
 
@@ -487,7 +487,7 @@ adb -s RQCY70208AF pull /sdcard/busca_resultado.png /tmp/claude-1000/-home-thaly
 ```
 Expected: grid de resultado aparece no lugar dos carrosséis, mostrando só jogos cujo nome bate com o termo digitado.
 
-- [ ] **Step 3: Digitar uma consulta sem nenhum resultado**
+- [x] **Step 3: Digitar uma consulta sem nenhum resultado**
 
 Limpar o campo (seleciona tudo + apaga, ou fecha e reabre a busca) e digitar um termo que não bate em nenhum jogo (ex: "zzzzz"). Screenshot:
 
@@ -497,7 +497,7 @@ adb -s RQCY70208AF pull /sdcard/busca_vazia.png /tmp/claude-1000/-home-thalys-Pr
 ```
 Expected: texto "Nenhum jogo encontrado" centralizado, sem crash.
 
-- [ ] **Step 4: Fechar a busca (ícone X) e confirmar volta pros carrosséis**
+- [x] **Step 4: Fechar a busca (ícone X) e confirmar volta pros carrosséis**
 
 Achar via uiautomator dump o ícone com `content-desc="Fechar busca"`, tocar. Screenshot:
 
@@ -507,7 +507,7 @@ adb -s RQCY70208AF pull /sdcard/busca_fechada.png /tmp/claude-1000/-home-thalys-
 ```
 Expected: chips + carrosséis normais de volta, campo de busca colapsado, título "Catálogo SNES" visível de novo.
 
-- [ ] **Step 5: Checar logcat por crash em todo o fluxo**
+- [x] **Step 5: Checar logcat por crash em todo o fluxo**
 
 ```bash
 adb -s RQCY70208AF logcat -d -t 300 '*:E' | grep -iE "AndroidRuntime|FATAL|catalogosnes" || echo "sem erros"
