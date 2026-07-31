@@ -118,7 +118,7 @@ git commit -m "feat: filtrarPorNome — busca por nome na biblioteca"
 
 Refatoração pura — nenhum teste automatizado existe pra Compose neste projeto (ver Global Constraints); verificação é por compilação bem-sucedida + inspeção visual da Task 5.
 
-- [ ] **Step 1: Extrair o grid pra `GridDeJogos`, preservando o comportamento atual de `TelaCategoriaCompleta`**
+- [x] **Step 1: Extrair o grid pra `GridDeJogos`, preservando o comportamento atual de `TelaCategoriaCompleta`**
 
 Em `TelaCategoriaCompleta.kt`, trocar o corpo do `when` dentro de `Scaffold` (que hoje tem os três ramos `carregando` / `jogos.isEmpty()` / `else -> LazyVerticalGrid(...)`) por:
 
@@ -164,7 +164,7 @@ fun GridDeJogos(
 ) {
     if (jogos.isEmpty()) {
         Box(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize().padding(contentPadding),
             contentAlignment = Alignment.Center,
         ) {
             Text(mensagemVazia)
@@ -186,13 +186,15 @@ fun GridDeJogos(
 }
 ```
 
+**Nota pós-revisão (2026-07-31):** o bloco acima corrige um bug achado na revisão da Task 2 — a versão original deste plano tinha `modifier.fillMaxSize()` sem `.padding(contentPadding)` no ramo vazio, perdendo o inset do `paddingInterno` do Scaffold (o texto "Nenhum jogo nesta categoria" podia renderizar sob a TopAppBar). O `contentPadding` agora é aplicado nos dois ramos.
+
 Adicionar o import que falta no topo do arquivo (`PaddingValues` ainda não é usado em `TelaCategoriaCompleta.kt`):
 
 ```kotlin
 import androidx.compose.foundation.layout.PaddingValues
 ```
 
-- [ ] **Step 2: Compilar e confirmar que não quebrou nada**
+- [x] **Step 2: Compilar e confirmar que não quebrou nada**
 
 Run:
 ```bash
@@ -201,7 +203,7 @@ export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/main/java/com/thalys/catalogosnes/ui/biblioteca/TelaCategoriaCompleta.kt

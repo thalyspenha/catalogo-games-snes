@@ -3,6 +3,7 @@ package com.thalys.catalogosnes.ui.biblioteca
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,26 +74,47 @@ fun TelaCategoriaCompleta(
                 CircularProgressIndicator()
             }
 
-            estado.jogos.isEmpty() -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingInterno),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("Nenhum jogo nesta categoria")
-            }
-
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = paddingInterno,
+            else -> GridDeJogos(
+                jogos = estado.jogos,
+                aoClicarJogo = aoClicarJogo,
+                mensagemVazia = "Nenhum jogo nesta categoria",
                 modifier = Modifier.padding(8.dp),
-            ) {
-                items(estado.jogos, key = { it.jogo.id }) { jogoComPosse ->
-                    CartaoJogoGrid(
-                        jogoComPosse = jogoComPosse,
-                        aoClicar = { aoClicarJogo(jogoComPosse.jogo.id) },
-                    )
-                }
+                contentPadding = paddingInterno,
+            )
+        }
+    }
+}
+
+/**
+ * Grid de 3 colunas com estado vazio embutido — reaproveitado por [TelaCategoriaCompleta]
+ * e pelo resultado de busca em [TelaBiblioteca].
+ */
+@Composable
+fun GridDeJogos(
+    jogos: List<JogoComPosse>,
+    aoClicarJogo: (Long) -> Unit,
+    mensagemVazia: String,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(8.dp),
+) {
+    if (jogos.isEmpty()) {
+        Box(
+            modifier = modifier.fillMaxSize().padding(contentPadding),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(mensagemVazia)
+        }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            contentPadding = contentPadding,
+            modifier = modifier,
+        ) {
+            items(jogos, key = { it.jogo.id }) { jogoComPosse ->
+                CartaoJogoGrid(
+                    jogoComPosse = jogoComPosse,
+                    aoClicar = { aoClicarJogo(jogoComPosse.jogo.id) },
+                )
             }
         }
     }
