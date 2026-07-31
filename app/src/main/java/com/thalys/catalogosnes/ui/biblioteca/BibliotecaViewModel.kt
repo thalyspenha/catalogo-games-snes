@@ -9,14 +9,15 @@ import com.thalys.catalogosnes.data.repository.JogoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /** Estado exibido pela [com.thalys.catalogosnes.ui.biblioteca.TelaBiblioteca]. */
 data class BibliotecaUiState(
     val linhas: List<LinhaCarrossel> = emptyList(),
     val resultadoBusca: List<JogoComPosse>? = null,
-    val consultaBusca: String = "",
     val carregando: Boolean = true,
 )
 
@@ -25,22 +26,26 @@ data class BibliotecaUiState(
  * carrosséis por categoria via [montarCarrosseis] e expõe como [StateFlow] para a UI.
  * Combina com a consulta de busca ([aoMudarConsultaBusca]): consulta em branco mantém
  * [BibliotecaUiState.resultadoBusca] como `null` (mostra carrosséis); não-vazia filtra a
- * lista via [filtrarPorNome] (mostra grid de resultado).
+ * lista via [filtrarPorNome] (mostra grid de resultado). [montarCarrosseis] só recomputa
+ * quando o repositório re-emite (ex: sync), não a cada tecla digitada.
  */
 class BibliotecaViewModel(
     repository: JogoRepository,
 ) : ViewModel() {
 
-    private val consultaBusca = MutableStateFlow("")
+    private val _consultaBusca = MutableStateFlow("")
+
+    /** Exposta separada de [estadoUi] pra o campo de busca mostrar o texto digitado sem
+     * depender da primeira emissão do repositório (ainda não aconteceu enquanto carregando). */
+    val consultaBusca: StateFlow<String> = _consultaBusca.asStateFlow()
 
     val estadoUi: StateFlow<BibliotecaUiState> = combine(
-        repository.observarBiblioteca(),
-        consultaBusca,
-    ) { jogos, consulta ->
+        repository.observarBiblioteca().map { jogos -> jogos to montarCarrosseis(jogos) },
+        _consultaBusca,
+    ) { (jogos, linhas), consulta ->
         BibliotecaUiState(
-            linhas = montarCarrosseis(jogos),
+            linhas = linhas,
             resultadoBusca = if (consulta.isBlank()) null else filtrarPorNome(jogos, consulta),
-            consultaBusca = consulta,
             carregando = false,
         )
     }.stateIn(
@@ -50,7 +55,7 @@ class BibliotecaViewModel(
     )
 
     fun aoMudarConsultaBusca(texto: String) {
-        consultaBusca.value = texto
+        _consultaBusca.value = texto
     }
 
     /**

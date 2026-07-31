@@ -81,6 +81,7 @@ fun TelaBiblioteca(
     ),
 ) {
     val estado by viewModel.estadoUi.collectAsStateWithLifecycle()
+    val consultaBusca by viewModel.consultaBusca.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val escopo = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -124,7 +125,7 @@ fun TelaBiblioteca(
                 title = {
                     if (buscaExpandida) {
                         TextField(
-                            value = estado.consultaBusca,
+                            value = consultaBusca,
                             onValueChange = viewModel::aoMudarConsultaBusca,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -168,9 +169,8 @@ fun TelaBiblioteca(
                 jogos = resultadoBusca,
                 aoClicarJogo = aoClicarJogo,
                 mensagemVazia = "Nenhum jogo encontrado",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingInterno),
+                modifier = Modifier.padding(8.dp),
+                contentPadding = paddingInterno,
             )
 
             else -> Column(
