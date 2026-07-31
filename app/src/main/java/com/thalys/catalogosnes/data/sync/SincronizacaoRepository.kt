@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
+import okhttp3.OkHttpClient
 import retrofit2.HttpException
 
 private const val THROTTLE_MS = 1200L
@@ -40,6 +41,7 @@ class SincronizacaoRepository(
     private val posseUsuarioDao: PosseUsuarioDao,
     private val sincronizacaoStatusDao: SincronizacaoStatusDao,
     private val screenScraperApi: ScreenScraperApi,
+    private val okHttpClient: OkHttpClient,
 ) {
 
     private val _estado = MutableStateFlow<SincronizacaoEstado>(SincronizacaoEstado.Ocioso)
@@ -114,7 +116,10 @@ class SincronizacaoRepository(
                             SincronizacaoStatusEntity(item.crc, StatusSincronizacao.FALHA, null, "Resposta sem id/nome válidos")
                         )
                     } else {
-                        jogoDao.inserirTodos(listOf(jogoEntity))
+                        val caminhoCapa = jogoEntity.urlCapa?.let { url ->
+                            CapaDownloader.baixar(context, okHttpClient, jogoEntity.id, url)
+                        }
+                        jogoDao.inserirTodos(listOf(jogoEntity.copy(caminhoCapaLocal = caminhoCapa)))
                         sincronizacaoStatusDao.salvar(
                             SincronizacaoStatusEntity(item.crc, StatusSincronizacao.SUCESSO, jogoEntity.id, null)
                         )
@@ -209,6 +214,7 @@ class SincronizacaoRepository(
                         posseUsuarioDao = banco.posseUsuarioDao(),
                         sincronizacaoStatusDao = banco.sincronizacaoStatusDao(),
                         screenScraperApi = NetworkModule.screenScraperApi,
+                        okHttpClient = NetworkModule.okHttpClient,
                     ).also { instancia = it }
                 }
             }

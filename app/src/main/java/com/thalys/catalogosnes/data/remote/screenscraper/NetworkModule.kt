@@ -31,7 +31,7 @@ object NetworkModule {
         level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
-    private val okHttpClient: OkHttpClient by lazy {
+    val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
