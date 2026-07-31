@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,6 +78,7 @@ fun TelaBiblioteca(
     val listState = rememberLazyListState()
     val escopo = rememberCoroutineScope()
     var chipExpandido by remember { mutableStateOf<TipoCategoria?>(null) }
+    var buscaExpandida by remember { mutableStateOf(false) }
 
     fun rolarParaTitulo(titulo: String) {
         val indice = estado.linhas.indexOfFirst { it.titulo == titulo }
@@ -93,15 +97,40 @@ fun TelaBiblioteca(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Catálogo SNES") },
+                title = {
+                    if (buscaExpandida) {
+                        TextField(
+                            value = estado.consultaBusca,
+                            onValueChange = viewModel::aoMudarConsultaBusca,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Buscar jogo") },
+                        )
+                    } else {
+                        Text("Catálogo SNES")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = aoClicarSincronizar) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Sincronizar catálogo")
+                    if (buscaExpandida) {
+                        IconButton(onClick = {
+                            buscaExpandida = false
+                            viewModel.aoMudarConsultaBusca("")
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "Fechar busca")
+                        }
+                    } else {
+                        IconButton(onClick = { buscaExpandida = true }) {
+                            Icon(Icons.Default.Search, contentDescription = "Buscar jogo")
+                        }
+                        IconButton(onClick = aoClicarSincronizar) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Sincronizar catálogo")
+                        }
                     }
                 },
             )
         }
     ) { paddingInterno ->
+        val resultadoBusca = estado.resultadoBusca
         when {
             estado.carregando -> Box(
                 modifier = Modifier
@@ -111,6 +140,15 @@ fun TelaBiblioteca(
             ) {
                 CircularProgressIndicator()
             }
+
+            resultadoBusca != null -> GridDeJogos(
+                jogos = resultadoBusca,
+                aoClicarJogo = aoClicarJogo,
+                mensagemVazia = "Nenhum jogo encontrado",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingInterno),
+            )
 
             else -> Column(
                 modifier = Modifier
