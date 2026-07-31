@@ -17,4 +17,5 @@ data class JogoEntity(
     val publicadora: String?,
     val urlCapa: String?,
     val regiao: String?,
+    val caminhoCapaLocal: String? = null,
 )

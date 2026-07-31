@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [JogoEntity::class, PosseUsuarioEntity::class, SincronizacaoStatusEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,6 +39,12 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        private val MIGRACAO_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE jogos ADD COLUMN caminhoCapaLocal TEXT")
             }
         }
 
@@ -69,7 +75,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
             db = Room.databaseBuilder(context, AppDatabase::class.java, NOME_BANCO)
                 .addCallback(callbackDeSeed)
-                .addMigrations(MIGRACAO_1_2)
+                .addMigrations(MIGRACAO_1_2, MIGRACAO_2_3)
                 .build()
             return db
         }
