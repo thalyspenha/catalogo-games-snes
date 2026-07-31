@@ -21,15 +21,6 @@ object ScreenScraperMapper {
     private const val TIPO_CAPA_2D = "box-2D"
     private const val TIPO_CAPA_3D = "box-3D"
 
-    /**
-     * Largura máxima pedida ao ScreenScraper pra capa (parâmetro `maxwidth`, respeitado
-     * server-side). 600px dá folga confortável pra thumbnail de 120dp mesmo em tela de
-     * densidade alta (3x × 120dp ≈ 360px), cortando bastante o tamanho do arquivo em relação
-     * ao original em resolução plena (medido: média de 511KB/capa sem limite, ~880MB pro
-     * catálogo completo de 1763 jogos).
-     */
-    private const val LARGURA_MAXIMA_CAPA = 600
-
     /** Retorna null se o DTO não tiver o mínimo necessário (id e nome). */
     fun paraJogoEntity(jeu: JeuDto): JogoEntity? {
         val id = jeu.id?.toLongOrNull() ?: return null
@@ -84,13 +75,11 @@ object ScreenScraperMapper {
         if (medias.isNullOrEmpty()) return null
         val capas = medias.filter { it.type == TIPO_CAPA_2D || it.type == TIPO_CAPA_3D }
         for (regiao in PRIORIDADE_REGIAO) {
-            capas.firstOrNull { it.region == regiao && it.type == TIPO_CAPA_2D }?.url?.let { return comMaxWidth(it) }
+            capas.firstOrNull { it.region == regiao && it.type == TIPO_CAPA_2D }?.url?.let { return it }
         }
         for (regiao in PRIORIDADE_REGIAO) {
-            capas.firstOrNull { it.region == regiao }?.url?.let { return comMaxWidth(it) }
+            capas.firstOrNull { it.region == regiao }?.url?.let { return it }
         }
-        return capas.firstOrNull()?.url?.let { comMaxWidth(it) }
+        return capas.firstOrNull()?.url
     }
-
-    private fun comMaxWidth(url: String): String = "$url&maxwidth=$LARGURA_MAXIMA_CAPA"
 }
