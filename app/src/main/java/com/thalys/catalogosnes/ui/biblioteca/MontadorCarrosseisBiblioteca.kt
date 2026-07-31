@@ -64,3 +64,13 @@ fun mostrarVerTudo(linha: LinhaCarrossel, cap: Int = CAP_PADRAO_POR_LINHA): Bool
 /** Jogos a exibir na linha: a lista inteira se estiver dentro do [cap], senão só os primeiros [cap]. */
 fun jogosVisiveis(linha: LinhaCarrossel, cap: Int = CAP_PADRAO_POR_LINHA): List<JogoComPosse> =
     if (linha.jogos.size <= cap) linha.jogos else linha.jogos.take(cap)
+
+/**
+ * Filtra a biblioteca por substring do nome, case-insensitive, sem accent-folding.
+ * Consulta em branco retorna a lista inteira sem filtrar — decisão de "não buscar
+ * quando vazio" fica em quem chama.
+ */
+fun filtrarPorNome(jogos: List<JogoComPosse>, consulta: String): List<JogoComPosse> {
+    if (consulta.isBlank()) return jogos
+    return jogos.filter { it.jogo.nome.contains(consulta, ignoreCase = true) }
+}

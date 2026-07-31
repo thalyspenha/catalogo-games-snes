@@ -242,4 +242,31 @@ class MontadorCarrosseisBibliotecaTest {
         assertEquals(20, visiveis.size)
         assertEquals((0..19).map { it.toLong() }, visiveis.map { it.jogo.id })
     }
+
+    @Test
+    fun `filtrarPorNome acha substring no meio do nome, case-insensitive`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "The Legend of Zelda: A Link to the Past"), null),
+            JogoComPosse(jogo(2, "Chrono Trigger"), null),
+        )
+        val resultado = filtrarPorNome(jogos, "zelda")
+        assertEquals(listOf(1L), resultado.map { it.jogo.id })
+    }
+
+    @Test
+    fun `filtrarPorNome sem nenhum resultado retorna lista vazia`() {
+        val jogos = listOf(JogoComPosse(jogo(1, "Chrono Trigger"), null))
+        val resultado = filtrarPorNome(jogos, "mario")
+        assertEquals(emptyList<JogoComPosse>(), resultado)
+    }
+
+    @Test
+    fun `filtrarPorNome com consulta em branco retorna a lista inteira`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A"), null),
+            JogoComPosse(jogo(2, "B"), null),
+        )
+        assertEquals(jogos, filtrarPorNome(jogos, ""))
+        assertEquals(jogos, filtrarPorNome(jogos, "   "))
+    }
 }
