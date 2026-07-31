@@ -326,7 +326,7 @@ git commit -m "feat: BibliotecaViewModel expõe estado de busca (consultaBusca/r
 
 Sem teste automatizado (ver Global Constraints); verificação visual acontece na Task 5.
 
-- [ ] **Step 1: Adicionar ícone de busca, campo expansível e grid de resultado**
+- [x] **Step 1: Adicionar ícone de busca, campo expansível e grid de resultado**
 
 Em `TelaBiblioteca.kt`, adicionar aos imports existentes:
 
@@ -439,7 +439,7 @@ Substituir o `Scaffold(topBar = { TopAppBar(...) })` inteiro por:
 
 (O `val resultadoBusca = estado.resultadoBusca` local é só pra o compilador do Kotlin fazer smart-cast de `List<JogoComPosse>?` pra `List<JogoComPosse>` dentro do `when` — acessar `estado.resultadoBusca` direto no `when` não teria smart-cast por ser propriedade de outra classe.)
 
-- [ ] **Step 2: Compilar**
+- [x] **Step 2: Compilar**
 
 Run:
 ```bash
@@ -448,7 +448,7 @@ export JAVA_HOME=/nix/store/i39marv4b6f5b1rfygp0vqfjrn5pqixy-openjdk-21.0.12+2
 ```
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/main/java/com/thalys/catalogosnes/ui/biblioteca/TelaBiblioteca.kt
