@@ -279,4 +279,62 @@ class MontadorCarrosseisBibliotecaTest {
         val resultado = filtrarPorNome(jogos, "zelda ")
         assertEquals(listOf(1L), resultado.map { it.jogo.id })
     }
+
+    @Test
+    fun `jogo com status quero ter aparece na linha quero ter`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.QUERO_TER)),
+            JogoComPosse(jogo(2, "B"), posse(2, StatusPosse.TENHO)),
+        )
+
+        val linhas = montarCarrosseis(jogos)
+        val queroTer = linhas.first { it.titulo == "Quero ter" }
+
+        assertEquals(listOf(1L), queroTer.jogos.map { it.jogo.id })
+    }
+
+    @Test
+    fun `jogo com status quero ter tambem aparece em faltam`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.QUERO_TER)),
+        )
+
+        val linhas = montarCarrosseis(jogos)
+        val faltam = linhas.first { it.titulo == "Faltam" }
+
+        assertEquals(listOf(1L), faltam.jogos.map { it.jogo.id })
+    }
+
+    @Test
+    fun `sem nenhum jogo quero ter, linha quero ter nao aparece`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.TENHO)),
+        )
+
+        val linhas = montarCarrosseis(jogos)
+
+        assertEquals(null, linhas.firstOrNull { it.titulo == "Quero ter" })
+    }
+
+    @Test
+    fun `ordem das categorias inclui quero ter entre meus jogos e faltam`() {
+        val jogos = listOf(
+            JogoComPosse(jogo(1, "A", genero = "RPG", ano = 1994), posse(1, StatusPosse.TENHO)),
+            JogoComPosse(jogo(2, "B", genero = "Ação", ano = 1995), posse(2, StatusPosse.QUERO_TER)),
+        )
+
+        val linhas = montarCarrosseis(jogos)
+
+        assertEquals(
+            listOf("Meus jogos", "Quero ter", "Faltam", "Ação", "RPG", "1994", "1995"),
+            linhas.map { it.titulo },
+        )
+    }
+
+    @Test
+    fun `linha de quero ter tem tipo QUERO_TER`() {
+        val jogos = listOf(JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.QUERO_TER)))
+        val linhas = montarCarrosseis(jogos)
+        assertEquals(TipoCategoria.QUERO_TER, linhas.first { it.titulo == "Quero ter" }.tipo)
+    }
 }

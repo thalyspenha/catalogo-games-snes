@@ -3,7 +3,7 @@ package com.thalys.catalogosnes.ui.biblioteca
 import com.thalys.catalogosnes.data.local.JogoComPosse
 import com.thalys.catalogosnes.data.model.StatusPosse
 
-enum class TipoCategoria { MEUS_JOGOS, FALTAM, GENERO, ANO }
+enum class TipoCategoria { MEUS_JOGOS, QUERO_TER, FALTAM, GENERO, ANO }
 
 /** Uma linha de carrossel na biblioteca: título da categoria + jogos que pertencem a ela. */
 data class LinhaCarrossel(
@@ -13,6 +13,7 @@ data class LinhaCarrossel(
 )
 
 private const val TITULO_MEUS_JOGOS = "Meus jogos"
+private const val TITULO_QUERO_TER = "Quero ter"
 private const val TITULO_FALTAM = "Faltam"
 private const val TITULO_SEM_GENERO = "Sem gênero"
 private const val TITULO_SEM_ANO = "Sem ano"
@@ -29,6 +30,11 @@ fun montarCarrosseis(jogos: List<JogoComPosse>): List<LinhaCarrossel> {
     val meusJogos = jogos.filter { it.posse?.status == StatusPosse.TENHO }
     if (meusJogos.isNotEmpty()) {
         linhas += LinhaCarrossel(TITULO_MEUS_JOGOS, meusJogos, TipoCategoria.MEUS_JOGOS)
+    }
+
+    val queroTer = jogos.filter { it.posse?.status == StatusPosse.QUERO_TER }
+    if (queroTer.isNotEmpty()) {
+        linhas += LinhaCarrossel(TITULO_QUERO_TER, queroTer, TipoCategoria.QUERO_TER)
     }
 
     val faltam = jogos.filter {
