@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 private fun tituloFiltro(filtro: FiltroBiblioteca): String = when (filtro) {
@@ -41,6 +42,10 @@ data class BibliotecaUiState(
  * [aoMudarConsultaBusca]) é independente do filtro: consulta em branco mantém
  * [BibliotecaUiState.resultadoBusca] como `null` (mostra o grid filtrado); não-vazia
  * pesquisa sempre na lista inteira via [filtrarPorNome], ignorando o filtro ativo.
+ * [generosDisponiveis]/[anosDisponiveis] são pré-mapeados a partir de
+ * [JogoRepository.observarBiblioteca] antes do `combine`, então só recomputam quando o
+ * repositório re-emite (ex: sync) — não a cada troca de filtro nem tecla digitada na busca
+ * (mesmo cuidado de performance já aplicado no antigo `montarCarrosseis`, fix wave 2026-07-31).
  */
 class BibliotecaViewModel(
     repository: JogoRepository,
@@ -52,15 +57,17 @@ class BibliotecaViewModel(
     private val _filtroSelecionado = MutableStateFlow<FiltroBiblioteca>(FiltroBiblioteca.Todos)
 
     val estadoUi: StateFlow<BibliotecaUiState> = combine(
-        repository.observarBiblioteca(),
+        repository.observarBiblioteca().map { jogos ->
+            Triple(jogos, generosDisponiveis(jogos), anosDisponiveis(jogos))
+        },
         _filtroSelecionado,
         _consultaBusca,
-    ) { jogos, filtro, consulta ->
+    ) { (jogos, generos, anos), filtro, consulta ->
         BibliotecaUiState(
             jogosFiltrados = filtrarBiblioteca(jogos, filtro),
             filtroSelecionado = filtro,
-            generosDisponiveis = generosDisponiveis(jogos),
-            anosDisponiveis = anosDisponiveis(jogos),
+            generosDisponiveis = generos,
+            anosDisponiveis = anos,
             resultadoBusca = if (consulta.isBlank()) null else filtrarPorNome(jogos, consulta),
             carregando = false,
         )

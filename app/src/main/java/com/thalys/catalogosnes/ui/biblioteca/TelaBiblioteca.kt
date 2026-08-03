@@ -40,6 +40,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -93,7 +94,7 @@ fun TelaBiblioteca(
     val focusManager = LocalFocusManager.current
     val focusRequesterBusca = remember { FocusRequester() }
     var buscaExpandida by rememberSaveable { mutableStateOf(false) }
-    var submenuExpandido by remember { mutableStateOf<SubmenuFiltro?>(null) }
+    var submenuExpandido by rememberSaveable { mutableStateOf<SubmenuFiltro?>(null) }
 
     fun fecharBusca() {
         buscaExpandida = false
@@ -115,10 +116,6 @@ fun TelaBiblioteca(
 
     BackHandler(enabled = buscaExpandida) {
         fecharBusca()
-    }
-
-    BackHandler(enabled = drawerState.isOpen) {
-        escopo.launch { drawerState.close() }
     }
 
     ModalNavigationDrawer(
@@ -197,13 +194,15 @@ fun TelaBiblioteca(
                     contentPadding = paddingInterno,
                 )
 
-                else -> GridDeJogos(
-                    jogos = estado.jogosFiltrados,
-                    aoClicarJogo = aoClicarJogo,
-                    mensagemVazia = "Nenhum jogo encontrado",
-                    modifier = Modifier.padding(8.dp),
-                    contentPadding = paddingInterno,
-                )
+                else -> key(estado.filtroSelecionado) {
+                    GridDeJogos(
+                        jogos = estado.jogosFiltrados,
+                        aoClicarJogo = aoClicarJogo,
+                        mensagemVazia = "Nenhum jogo encontrado",
+                        modifier = Modifier.padding(8.dp),
+                        contentPadding = paddingInterno,
+                    )
+                }
             }
         }
     }
