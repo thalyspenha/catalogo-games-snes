@@ -3,37 +3,38 @@ package com.thalys.catalogosnes.ui.biblioteca
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,35 +66,43 @@ import com.thalys.catalogosnes.ui.theme.SnesVerde
 import com.thalys.catalogosnes.ui.theme.SnesVermelho
 import kotlinx.coroutines.launch
 
+private enum class SubmenuFiltro { GENERO, ANO }
+
 /**
- * Biblioteca principal (estilo Netflix): carrosséis horizontais por categoria
- * (Meus jogos, Quero ter, Faltam, Gênero, Ano), montados por [montarCarrosseis]. Barra de chips no
- * topo permite pular direto pra qualquer linha; linhas com mais de 20 jogos ganham um
- * card "Ver tudo" que abre a tela de grid completo daquela categoria.
+ * Biblioteca principal: grid único (4 colunas) com o catálogo completo, sempre visível ao
+ * abrir o app (filtro default [FiltroBiblioteca.Todos]). Menu lateral
+ * ([ModalNavigationDrawer], aberto pelo ícone de hambúrguer) aplica um [FiltroBiblioteca]
+ * por vez sobre o grid; Gênero/Ano expandem submenu com os valores existentes no catálogo
+ * atual, incluindo "Sem gênero"/"Sem ano". Busca por nome ignora o filtro ativo.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaBiblioteca(
     aoClicarJogo: (Long) -> Unit,
     aoClicarSincronizar: () -> Unit,
-    aoClicarVerTudo: (String) -> Unit,
     viewModel: BibliotecaViewModel = viewModel(
         factory = BibliotecaViewModel.Factory(LocalContext.current)
     ),
 ) {
     val estado by viewModel.estadoUi.collectAsStateWithLifecycle()
     val consultaBusca by viewModel.consultaBusca.collectAsStateWithLifecycle()
-    val listState = rememberLazyListState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val escopo = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val focusRequesterBusca = remember { FocusRequester() }
-    var chipExpandido by remember { mutableStateOf<TipoCategoria?>(null) }
     var buscaExpandida by rememberSaveable { mutableStateOf(false) }
+    var submenuExpandido by remember { mutableStateOf<SubmenuFiltro?>(null) }
 
     fun fecharBusca() {
         buscaExpandida = false
         viewModel.aoMudarConsultaBusca("")
         focusManager.clearFocus()
+    }
+
+    fun selecionarFiltro(filtro: FiltroBiblioteca) {
+        viewModel.aoSelecionarFiltro(filtro)
+        submenuExpandido = null
+        escopo.launch { drawerState.close() }
     }
 
     LaunchedEffect(buscaExpandida) {
@@ -102,221 +111,216 @@ fun TelaBiblioteca(
         }
     }
 
-    fun rolarParaTitulo(titulo: String) {
-        val indice = estado.linhas.indexOfFirst { it.titulo == titulo }
-        if (indice >= 0) {
-            escopo.launch { listState.scrollToItem(indice) }
-        }
-    }
-
-    fun rolarParaPrimeiraDoTipo(tipo: TipoCategoria) {
-        val indice = estado.linhas.indexOfFirst { it.tipo == tipo }
-        if (indice >= 0) {
-            escopo.launch { listState.scrollToItem(indice) }
-        }
-    }
-
     BackHandler(enabled = buscaExpandida) {
         fecharBusca()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    if (buscaExpandida) {
-                        TextField(
-                            value = consultaBusca,
-                            onValueChange = viewModel::aoMudarConsultaBusca,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequesterBusca),
-                            singleLine = true,
-                            placeholder = { Text("Buscar jogo") },
-                        )
-                    } else {
-                        Text("Catálogo SNES")
-                    }
-                },
-                actions = {
-                    if (buscaExpandida) {
-                        IconButton(onClick = { fecharBusca() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Fechar busca")
-                        }
-                    } else {
-                        IconButton(onClick = { buscaExpandida = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Buscar jogo")
-                        }
-                        IconButton(onClick = aoClicarSincronizar) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Sincronizar catálogo")
-                        }
-                    }
-                },
-            )
-        }
-    ) { paddingInterno ->
-        val resultadoBusca = estado.resultadoBusca
-        when {
-            estado.carregando -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingInterno),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
+    BackHandler(enabled = drawerState.isOpen) {
+        escopo.launch { drawerState.close() }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                ConteudoMenuFiltro(
+                    filtroSelecionado = estado.filtroSelecionado,
+                    generosDisponiveis = estado.generosDisponiveis,
+                    anosDisponiveis = estado.anosDisponiveis,
+                    submenuExpandido = submenuExpandido,
+                    aoAlternarSubmenu = { tipo ->
+                        submenuExpandido = if (submenuExpandido == tipo) null else tipo
+                    },
+                    aoSelecionarFiltro = ::selecionarFiltro,
+                )
             }
-
-            resultadoBusca != null -> GridDeJogos(
-                jogos = resultadoBusca,
-                aoClicarJogo = aoClicarJogo,
-                mensagemVazia = "Nenhum jogo encontrado",
-                modifier = Modifier.padding(8.dp),
-                contentPadding = paddingInterno,
-            )
-
-            else -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingInterno),
-            ) {
-                BarraDeIndice(
-                    linhas = estado.linhas,
-                    chipExpandido = chipExpandido,
-                    aoTocarMeusJogos = { rolarParaPrimeiraDoTipo(TipoCategoria.MEUS_JOGOS) },
-                    aoTocarQueroTer = { rolarParaPrimeiraDoTipo(TipoCategoria.QUERO_TER) },
-                    aoTocarFaltam = { rolarParaPrimeiraDoTipo(TipoCategoria.FALTAM) },
-                    aoAlternarGenero = {
-                        chipExpandido = if (chipExpandido == TipoCategoria.GENERO) null else TipoCategoria.GENERO
+        },
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = { escopo.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Abrir menu de filtro")
+                        }
                     },
-                    aoAlternarAno = {
-                        chipExpandido = if (chipExpandido == TipoCategoria.ANO) null else TipoCategoria.ANO
+                    title = {
+                        if (buscaExpandida) {
+                            TextField(
+                                value = consultaBusca,
+                                onValueChange = viewModel::aoMudarConsultaBusca,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequesterBusca),
+                                singleLine = true,
+                                placeholder = { Text("Buscar jogo") },
+                            )
+                        } else {
+                            Text(estado.tituloTopBar)
+                        }
                     },
-                    aoEscolherValor = { titulo ->
-                        rolarParaTitulo(titulo)
-                        chipExpandido = null
+                    actions = {
+                        if (buscaExpandida) {
+                            IconButton(onClick = { fecharBusca() }) {
+                                Icon(Icons.Default.Close, contentDescription = "Fechar busca")
+                            }
+                        } else {
+                            IconButton(onClick = { buscaExpandida = true }) {
+                                Icon(Icons.Default.Search, contentDescription = "Buscar jogo")
+                            }
+                            IconButton(onClick = aoClicarSincronizar) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Sincronizar catálogo")
+                            }
+                        }
                     },
                 )
-
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-                    items(estado.linhas, key = { it.titulo }) { linha ->
-                        LinhaCarrosselView(
-                            linha = linha,
-                            aoClicarJogo = aoClicarJogo,
-                            aoClicarVerTudo = aoClicarVerTudo,
-                        )
-                    }
+            }
+        ) { paddingInterno ->
+            val resultadoBusca = estado.resultadoBusca
+            when {
+                estado.carregando -> Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingInterno),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
                 }
+
+                resultadoBusca != null -> GridDeJogos(
+                    jogos = resultadoBusca,
+                    aoClicarJogo = aoClicarJogo,
+                    mensagemVazia = "Nenhum jogo encontrado",
+                    modifier = Modifier.padding(8.dp),
+                    contentPadding = paddingInterno,
+                )
+
+                else -> GridDeJogos(
+                    jogos = estado.jogosFiltrados,
+                    aoClicarJogo = aoClicarJogo,
+                    mensagemVazia = "Nenhum jogo encontrado",
+                    modifier = Modifier.padding(8.dp),
+                    contentPadding = paddingInterno,
+                )
             }
         }
     }
 }
 
-/** Barra fixa no topo: chips "Meus jogos"/"Quero ter"/"Faltam" pulam direto; "Gênero"/"Ano" expandem
- * uma segunda linha de chips (empurra o conteúdo pra baixo, sem modal) com os valores
- * daquele tipo pra escolher exatamente pra qual linha pular. */
+/** Conteúdo do menu lateral: Todos/Tenho/Quero ter/Faltam pulam direto; Gênero/Ano expandem
+ * submenu inline com os valores existentes no catálogo. Selecionar qualquer item aplica o
+ * filtro e fecha o drawer (via [aoSelecionarFiltro], que já chama `drawerState.close()`). */
 @Composable
-private fun BarraDeIndice(
-    linhas: List<LinhaCarrossel>,
-    chipExpandido: TipoCategoria?,
-    aoTocarMeusJogos: () -> Unit,
-    aoTocarQueroTer: () -> Unit,
-    aoTocarFaltam: () -> Unit,
-    aoAlternarGenero: () -> Unit,
-    aoAlternarAno: () -> Unit,
-    aoEscolherValor: (String) -> Unit,
-) {
-    val temMeusJogos = linhas.any { it.tipo == TipoCategoria.MEUS_JOGOS }
-    val temQueroTer = linhas.any { it.tipo == TipoCategoria.QUERO_TER }
-    val temFaltam = linhas.any { it.tipo == TipoCategoria.FALTAM }
-
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-        ) {
-            AssistChip(onClick = aoTocarMeusJogos, enabled = temMeusJogos, label = { Text("Meus jogos") }, modifier = Modifier.padding(end = 8.dp))
-            AssistChip(onClick = aoTocarQueroTer, enabled = temQueroTer, label = { Text("Quero ter") }, modifier = Modifier.padding(end = 8.dp))
-            AssistChip(onClick = aoTocarFaltam, enabled = temFaltam, label = { Text("Faltam") }, modifier = Modifier.padding(end = 8.dp))
-            AssistChip(onClick = aoAlternarGenero, label = { Text("Gênero") }, modifier = Modifier.padding(end = 8.dp))
-            AssistChip(onClick = aoAlternarAno, label = { Text("Ano") })
-        }
-
-        val titulosExpandidos = when (chipExpandido) {
-            null -> emptyList()
-            else -> linhas.filter { it.tipo == chipExpandido }.map { it.titulo }
-        }
-        if (titulosExpandidos.isNotEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-            ) {
-                titulosExpandidos.forEach { titulo ->
-                    AssistChip(
-                        onClick = { aoEscolherValor(titulo) },
-                        label = { Text(titulo) },
-                        modifier = Modifier.padding(end = 8.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LinhaCarrosselView(
-    linha: LinhaCarrossel,
-    aoClicarJogo: (Long) -> Unit,
-    aoClicarVerTudo: (String) -> Unit,
+private fun ConteudoMenuFiltro(
+    filtroSelecionado: FiltroBiblioteca,
+    generosDisponiveis: List<String>,
+    anosDisponiveis: List<String>,
+    submenuExpandido: SubmenuFiltro?,
+    aoAlternarSubmenu: (SubmenuFiltro) -> Unit,
+    aoSelecionarFiltro: (FiltroBiblioteca) -> Unit,
 ) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(
-            text = linha.titulo,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        NavigationDrawerItem(
+            label = { Text("Todos") },
+            selected = filtroSelecionado == FiltroBiblioteca.Todos,
+            onClick = { aoSelecionarFiltro(FiltroBiblioteca.Todos) },
+            modifier = Modifier.padding(horizontal = 12.dp),
         )
-        LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
-            items(jogosVisiveis(linha), key = { it.jogo.id }) { jogoComPosse ->
+        NavigationDrawerItem(
+            label = { Text("Tenho") },
+            selected = filtroSelecionado == FiltroBiblioteca.Tenho,
+            onClick = { aoSelecionarFiltro(FiltroBiblioteca.Tenho) },
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        NavigationDrawerItem(
+            label = { Text("Quero ter") },
+            selected = filtroSelecionado == FiltroBiblioteca.QueroTer,
+            onClick = { aoSelecionarFiltro(FiltroBiblioteca.QueroTer) },
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        NavigationDrawerItem(
+            label = { Text("Faltam") },
+            selected = filtroSelecionado == FiltroBiblioteca.Faltam,
+            onClick = { aoSelecionarFiltro(FiltroBiblioteca.Faltam) },
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        NavigationDrawerItem(
+            label = { Text("Gênero") },
+            selected = false,
+            onClick = { aoAlternarSubmenu(SubmenuFiltro.GENERO) },
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        if (submenuExpandido == SubmenuFiltro.GENERO) {
+            generosDisponiveis.forEach { valor ->
+                NavigationDrawerItem(
+                    label = { Text(valor) },
+                    selected = filtroSelecionado == FiltroBiblioteca.Genero(valor),
+                    onClick = { aoSelecionarFiltro(FiltroBiblioteca.Genero(valor)) },
+                    modifier = Modifier.padding(start = 28.dp, end = 12.dp),
+                )
+            }
+        }
+        NavigationDrawerItem(
+            label = { Text("Ano") },
+            selected = false,
+            onClick = { aoAlternarSubmenu(SubmenuFiltro.ANO) },
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        if (submenuExpandido == SubmenuFiltro.ANO) {
+            anosDisponiveis.forEach { valor ->
+                NavigationDrawerItem(
+                    label = { Text(valor) },
+                    selected = filtroSelecionado == FiltroBiblioteca.Ano(valor),
+                    onClick = { aoSelecionarFiltro(FiltroBiblioteca.Ano(valor)) },
+                    modifier = Modifier.padding(start = 28.dp, end = 12.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Grid de 4 colunas com estado vazio embutido — usado pelo grid principal da biblioteca e
+ * pelo resultado de busca.
+ */
+@Composable
+fun GridDeJogos(
+    jogos: List<JogoComPosse>,
+    aoClicarJogo: (Long) -> Unit,
+    mensagemVazia: String,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(8.dp),
+) {
+    if (jogos.isEmpty()) {
+        Box(
+            modifier = modifier.fillMaxSize().padding(contentPadding),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(mensagemVazia)
+        }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            contentPadding = contentPadding,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = modifier,
+        ) {
+            items(jogos, key = { it.jogo.id }) { jogoComPosse ->
                 CartaoJogo(
                     jogoComPosse = jogoComPosse,
                     aoClicar = { aoClicarJogo(jogoComPosse.jogo.id) },
                 )
             }
-            if (mostrarVerTudo(linha)) {
-                item(key = "${linha.titulo}:ver_tudo") {
-                    CartaoVerTudo(aoClicar = { aoClicarVerTudo(linha.titulo) })
-                }
-            }
         }
     }
 }
 
-@Composable
-private fun CartaoVerTudo(aoClicar: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(120.dp)
-            .aspectRatio(3f / 4f)
-            .padding(8.dp)
-            .clickable(onClick = aoClicar),
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "Ver tudo", style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
+/** Nome ganha `minLines = 2` pra reservar sempre a altura de 2 linhas, nome curto ou longo —
+ * padroniza a altura do card independente do tamanho do nome. */
 @Composable
 private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(120.dp)
-            .padding(8.dp)
-            .clickable(onClick = aoClicar),
-    ) {
+    Card(modifier = Modifier.clickable(onClick = aoClicar)) {
         Box {
             AsyncImage(
                 model = jogoComPosse.jogo.modeloCapa(),
@@ -331,10 +335,11 @@ private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
                 SeloStatus(status = status, modifier = Modifier.padding(6.dp))
             }
         }
-        Column(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.padding(6.dp)) {
             Text(
                 text = jogoComPosse.jogo.nome,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
+                minLines = 2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -342,10 +347,9 @@ private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
     }
 }
 
-/** Badge simples com a cor/rótulo do status de posse do jogo. Não é `private`: reaproveitado
- * por [com.thalys.catalogosnes.ui.biblioteca.TelaCategoriaCompleta] (mesmo pacote). */
+/** Badge simples com a cor/rótulo do status de posse do jogo. */
 @Composable
-internal fun SeloStatus(status: StatusPosse, modifier: Modifier = Modifier) {
+private fun SeloStatus(status: StatusPosse, modifier: Modifier = Modifier) {
     val (rotulo, cor) = when (status) {
         StatusPosse.TENHO -> "Tenho" to SnesVerde
         StatusPosse.QUERO_TER -> "Quero ter" to SnesRoxoClaro
@@ -364,6 +368,6 @@ internal fun SeloStatus(status: StatusPosse, modifier: Modifier = Modifier) {
 @Composable
 private fun PreviewTelaBiblioteca() {
     CatalogoSnesTheme {
-        TelaBiblioteca(aoClicarJogo = {}, aoClicarSincronizar = {}, aoClicarVerTudo = {})
+        TelaBiblioteca(aoClicarJogo = {}, aoClicarSincronizar = {})
     }
 }

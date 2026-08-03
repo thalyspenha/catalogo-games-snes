@@ -49,3 +49,13 @@ fun anosDisponiveis(jogos: List<JogoComPosse>): List<String> {
     val anos = porAno.keys.filterNotNull().sorted().map { it.toString() }
     return if (porAno.containsKey(null)) anos + SEM_ANO else anos
 }
+
+/**
+ * Filtra a biblioteca por substring do nome, case-insensitive, sem accent-folding.
+ * Consulta em branco retorna a lista inteira sem filtrar — decisão de "não buscar
+ * quando vazio" fica em quem chama.
+ */
+fun filtrarPorNome(jogos: List<JogoComPosse>, consulta: String): List<JogoComPosse> {
+    val termo = consulta.trim()
+    return jogos.filter { it.jogo.nome.contains(termo, ignoreCase = true) }
+}
