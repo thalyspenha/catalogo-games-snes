@@ -98,7 +98,7 @@ fun TelaDetalheJogo(
                 AsyncImage(
                     model = estado.jogo?.modeloCapa(),
                     contentDescription = estado.jogo?.nome,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(3f / 4f)

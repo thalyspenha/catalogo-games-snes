@@ -330,7 +330,7 @@ private fun CartaoJogo(jogoComPosse: JogoComPosse, aoClicar: () -> Unit) {
             AsyncImage(
                 model = jogoComPosse.jogo.modeloCapa(),
                 contentDescription = jogoComPosse.jogo.nome,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(3f / 4f),
