@@ -183,6 +183,7 @@ fun TelaBiblioteca(
                     linhas = estado.linhas,
                     chipExpandido = chipExpandido,
                     aoTocarMeusJogos = { rolarParaPrimeiraDoTipo(TipoCategoria.MEUS_JOGOS) },
+                    aoTocarQueroTer = { rolarParaPrimeiraDoTipo(TipoCategoria.QUERO_TER) },
                     aoTocarFaltam = { rolarParaPrimeiraDoTipo(TipoCategoria.FALTAM) },
                     aoAlternarGenero = {
                         chipExpandido = if (chipExpandido == TipoCategoria.GENERO) null else TipoCategoria.GENERO
@@ -218,12 +219,14 @@ private fun BarraDeIndice(
     linhas: List<LinhaCarrossel>,
     chipExpandido: TipoCategoria?,
     aoTocarMeusJogos: () -> Unit,
+    aoTocarQueroTer: () -> Unit,
     aoTocarFaltam: () -> Unit,
     aoAlternarGenero: () -> Unit,
     aoAlternarAno: () -> Unit,
     aoEscolherValor: (String) -> Unit,
 ) {
     val temMeusJogos = linhas.any { it.tipo == TipoCategoria.MEUS_JOGOS }
+    val temQueroTer = linhas.any { it.tipo == TipoCategoria.QUERO_TER }
     val temFaltam = linhas.any { it.tipo == TipoCategoria.FALTAM }
 
     Column {
@@ -234,6 +237,7 @@ private fun BarraDeIndice(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             AssistChip(onClick = aoTocarMeusJogos, enabled = temMeusJogos, label = { Text("Meus jogos") }, modifier = Modifier.padding(end = 8.dp))
+            AssistChip(onClick = aoTocarQueroTer, enabled = temQueroTer, label = { Text("Quero ter") }, modifier = Modifier.padding(end = 8.dp))
             AssistChip(onClick = aoTocarFaltam, enabled = temFaltam, label = { Text("Faltam") }, modifier = Modifier.padding(end = 8.dp))
             AssistChip(onClick = aoAlternarGenero, label = { Text("Gênero") }, modifier = Modifier.padding(end = 8.dp))
             AssistChip(onClick = aoAlternarAno, label = { Text("Ano") })
