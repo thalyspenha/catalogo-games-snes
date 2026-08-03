@@ -285,6 +285,8 @@ class MontadorCarrosseisBibliotecaTest {
         val jogos = listOf(
             JogoComPosse(jogo(1, "A"), posse(1, StatusPosse.QUERO_TER)),
             JogoComPosse(jogo(2, "B"), posse(2, StatusPosse.TENHO)),
+            JogoComPosse(jogo(3, "C"), posse(3, StatusPosse.NAO_INTERESSA)),
+            JogoComPosse(jogo(4, "D"), null),
         )
 
         val linhas = montarCarrosseis(jogos)

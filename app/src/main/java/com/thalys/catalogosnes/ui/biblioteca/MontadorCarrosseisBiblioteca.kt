@@ -21,7 +21,7 @@ private const val CAP_PADRAO_POR_LINHA = 20
 
 /**
  * Agrupa a biblioteca completa em linhas de carrossel, na ordem:
- * Meus jogos -> Faltam -> Gêneros (A-Z, "Sem gênero" no fim) -> Anos (cronológico, "Sem ano" no fim).
+ * Meus jogos -> Quero ter -> Faltam -> Gêneros (A-Z, "Sem gênero" no fim) -> Anos (cronológico, "Sem ano" no fim).
  * Categoria sem nenhum jogo não gera linha.
  */
 fun montarCarrosseis(jogos: List<JogoComPosse>): List<LinhaCarrossel> {

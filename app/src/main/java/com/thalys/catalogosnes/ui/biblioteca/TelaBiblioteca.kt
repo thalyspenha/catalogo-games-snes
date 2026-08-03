@@ -67,7 +67,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Biblioteca principal (estilo Netflix): carrosséis horizontais por categoria
- * (Meus jogos, Faltam, Gênero, Ano), montados por [montarCarrosseis]. Barra de chips no
+ * (Meus jogos, Quero ter, Faltam, Gênero, Ano), montados por [montarCarrosseis]. Barra de chips no
  * topo permite pular direto pra qualquer linha; linhas com mais de 20 jogos ganham um
  * card "Ver tudo" que abre a tela de grid completo daquela categoria.
  */
@@ -211,7 +211,7 @@ fun TelaBiblioteca(
     }
 }
 
-/** Barra fixa no topo: chips "Meus jogos"/"Faltam" pulam direto; "Gênero"/"Ano" expandem
+/** Barra fixa no topo: chips "Meus jogos"/"Quero ter"/"Faltam" pulam direto; "Gênero"/"Ano" expandem
  * uma segunda linha de chips (empurra o conteúdo pra baixo, sem modal) com os valores
  * daquele tipo pra escolher exatamente pra qual linha pular. */
 @Composable
