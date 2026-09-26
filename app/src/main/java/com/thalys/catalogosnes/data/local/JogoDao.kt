@@ -20,6 +20,10 @@ interface JogoDao {
     @Query("SELECT * FROM jogos WHERE id = :jogoId")
     suspend fun buscarPorId(jogoId: Long): JogoComPosse?
 
+    @Transaction
+    @Query("SELECT * FROM jogos")
+    suspend fun listarTodosComPosse(): List<JogoComPosse>
+
     @Query("DELETE FROM jogos")
     suspend fun limparTudo()
 }

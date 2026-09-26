@@ -83,9 +83,18 @@ class SincronizacaoRepository(
         val catalogoMestre = CatalogoMestreLoader.carregar(context)
         val totalLinhasStatus = sincronizacaoStatusDao.contarLinhas()
         if (totalLinhasStatus == 0) {
-            jogoDao.limparTudo()
+            // Primeira sync troca o catálogo do seed pelo do ScreenScraper. As posses marcadas
+            // sobre o seed vão para um arquivo de pendências (somadas a pendências antigas) antes
+            // da limpeza, e são reassociadas pelo nome conforme os jogos chegam da API.
+            val novasPendentes = extrairPossesPendentes(jogoDao.listarTodosComPosse())
+            PossesPendentesStore.salvar(context, PossesPendentesStore.carregar(context) + novasPendentes)
+            // Posse antes de jogos: posse_usuario tem FK para jogos.
             posseUsuarioDao.limparTudo()
+            jogoDao.limparTudo()
         }
+        val possesPendentes = PossesPendentesStore.carregar(context)
+            .associateBy { it.nomeNormalizado }
+            .toMutableMap()
 
         val crcsComSucesso = sincronizacaoStatusDao.buscarCrcsPorStatus(StatusSincronizacao.SUCESSO).toSet()
         val restante = calcularRestante(catalogoMestre, crcsComSucesso)
@@ -120,6 +129,10 @@ class SincronizacaoRepository(
                             CapaDownloader.baixar(context, okHttpClient, jogoEntity.id, url)
                         }
                         jogoDao.inserirTodos(listOf(jogoEntity.copy(caminhoCapaLocal = caminhoCapa)))
+                        possesPendentes.remove(normalizarNomeParaCasamento(jogoEntity.nome))?.let { pendente ->
+                            posseUsuarioDao.salvar(pendente.paraEntity(jogoEntity.id))
+                            PossesPendentesStore.salvar(context, possesPendentes.values.toList())
+                        }
                         sincronizacaoStatusDao.salvar(
                             SincronizacaoStatusEntity(item.crc, StatusSincronizacao.SUCESSO, jogoEntity.id, null)
                         )
