@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -21,7 +20,7 @@ fun screenScraperProperty(key: String): String = localProperties.getProperty(key
 
 android {
     namespace = "com.thalys.catalogosnes"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.thalys.catalogosnes"
@@ -49,13 +48,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
@@ -71,6 +72,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.core)
     debugImplementation(libs.androidx.ui.tooling)
 
     implementation(libs.androidx.room.runtime)
